@@ -211,72 +211,96 @@
             </div>
             
             <div class="mt-4 pt-4 border-t border-gray-200">
-                <div class="flex justify-between items-center mb-2 px-2">
-                    <p class="text-xs font-bold text-gray-500 uppercase">Weight Trend</p>
-                    <div class="flex bg-gray-100 rounded-lg p-0.5">
-                        <button id="chart-scope-week" class="px-2 py-1 text-[10px] font-bold rounded-md bg-white text-indigo-600 shadow-sm transition-all">1W</button>
-                        <button id="chart-scope-month" class="px-2 py-1 text-[10px] font-bold rounded-md text-gray-500 hover:text-indigo-600 transition-all">1M</button>
-                        <button id="chart-scope-year" class="px-2 py-1 text-[10px] font-bold rounded-md text-gray-500 hover:text-indigo-600 transition-all">1Y</button>
+                <div class="flex justify-between items-center mb-4 px-2">
+                    <h3 class="text-sm font-black text-gray-700 uppercase tracking-wide">📈 Health Trends</h3>
+                    <select id="chart-selector" onchange="switchChart(this.value)" class="bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-bold rounded-lg px-3 py-1.5 outline-none cursor-pointer hover:bg-indigo-100 transition-colors shadow-sm">
+                        <option value="calories">Calories In vs Out</option>
+                        <option value="weight">Morning Weight</option>
+                        <option value="bp">Blood Pressure</option>
+						<option value="hr">Heart Rate (BPM)</option>
+						<option value="sodium">Sodium Intake</option>
+                        <option value="fats">Fat Breakdown (Sat vs Unsat)</option>
+						<option disabled>──────────</option>
+                        <option value="net-carbs">Net Carbs</option>
+                        <option value="fiber">Fiber Intake</option>
+                        <option value="sugar">Total Sugars</option>
+						<option disabled>──────────</option>
+                        <option value="macros">Macronutrient Split</option>
+                        <option value="burn">Active vs. Resting Burn</option>
+                    </select>
+                </div>
+				
+				<!-- UNIVERSAL TIME SCOPE CONTROLS -->
+                <div class="flex justify-center mb-3 px-2">
+                    <div class="bg-gray-100 rounded-lg p-1 flex text-xs font-bold w-full max-w-[320px]">
+                        <button onclick="setGlobalChartRange(1)" id="global-btn-1" class="flex-1 px-2 py-1.5 rounded-md text-gray-400 hover:text-gray-600 transition-colors">1D</button>
+                        <button onclick="setGlobalChartRange(7)" id="global-btn-7" class="flex-1 px-2 py-1.5 rounded-md bg-white shadow-sm text-indigo-600 transition-colors">1W</button>
+                        <button onclick="setGlobalChartRange(30)" id="global-btn-30" class="flex-1 px-2 py-1.5 rounded-md text-gray-400 hover:text-gray-600 transition-colors">1M</button>
+                        <button onclick="setGlobalChartRange(365)" id="global-btn-365" class="flex-1 px-2 py-1.5 rounded-md text-gray-400 hover:text-gray-600 transition-colors">1Y</button>
+                        <button onclick="setGlobalChartRange(1825)" id="global-btn-1825" class="flex-1 px-2 py-1.5 rounded-md text-gray-400 hover:text-gray-600 transition-colors">5Y</button>
                     </div>
                 </div>
 
-                <div class="flex justify-between items-center mb-3 px-2">
-                    <button id="chart-prev-btn" class="text-gray-400 hover:text-indigo-600 font-bold px-2 py-0.5 rounded bg-gray-50 hover:bg-indigo-50 transition-colors">&lt;</button>
-                    <span id="chart-date-label" class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Last 7 Days</span>
-                    <button id="chart-next-btn" class="text-gray-400 hover:text-indigo-600 font-bold px-2 py-0.5 rounded bg-gray-50 hover:bg-indigo-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent" disabled>&gt;</button>
+                <div id="weight-controls" class="hidden mb-2">
+                    <div class="flex justify-between items-center mb-2 px-2">
+                        <div class="flex bg-gray-100 rounded-lg p-0.5">
+                            <button id="chart-scope-week" class="px-2 py-1 text-[10px] font-bold rounded-md bg-white text-indigo-600 shadow-sm transition-all">1W</button>
+                            <button id="chart-scope-month" class="px-2 py-1 text-[10px] font-bold rounded-md text-gray-500 hover:text-indigo-600 transition-all">1M</button>
+                            <button id="chart-scope-year" class="px-2 py-1 text-[10px] font-bold rounded-md text-gray-500 hover:text-indigo-600 transition-all">1Y</button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="chart-prev-btn" class="text-gray-400 hover:text-indigo-600 font-bold px-2 py-0.5 rounded bg-gray-50 hover:bg-indigo-50 transition-colors">&lt;</button>
+                            <span id="chart-date-label" class="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center w-16">7 Days</span>
+                            <button id="chart-next-btn" class="text-gray-400 hover:text-indigo-600 font-bold px-2 py-0.5 rounded bg-gray-50 hover:bg-indigo-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent" disabled>&gt;</button>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center mb-3 px-2">
+                        <p class="text-xs font-medium text-gray-500">Log Weight (lbs):</p>
+                        <input type="number" id="daily-weight-input" placeholder="e.g., 165" class="w-20 bg-white border border-gray-300 rounded px-2 py-1 text-center font-bold text-indigo-600 focus:outline-none focus:border-indigo-500 shadow-sm">
+                    </div>
                 </div>
 
-                <div class="flex justify-between items-center mb-3 px-2">
-                    <p class="text-xs font-medium text-gray-500">Morning Weight (lbs)</p>
-                    <input type="number" id="daily-weight-input" placeholder="e.g., 165" class="w-20 bg-white border border-gray-300 rounded px-2 py-1 text-center font-bold text-indigo-600 focus:outline-none focus:border-indigo-500">
+                <div id="calorie-controls" class="flex justify-end px-2 mb-3">
+                    <div class="bg-gray-100 rounded-lg p-1 flex text-xs font-bold" id="cal-time-filters">
+                        <button onclick="setCalorieRange(7)" id="cal-btn-7" class="px-3 py-1 rounded bg-white shadow-sm text-emerald-600 transition-colors">1W</button>
+                        <button onclick="setCalorieRange(30)" id="cal-btn-30" class="px-3 py-1 rounded text-gray-400 hover:text-gray-600 transition-colors">1M</button>
+                        <button onclick="setCalorieRange(365)" id="cal-btn-365" class="px-3 py-1 rounded text-gray-400 hover:text-gray-600 transition-colors">1Y</button>
+                    </div>
                 </div>
 
-                <div class="w-full h-32 relative">
-                    <canvas id="weightChart"></canvas>
+                <div class="bg-white rounded-xl border border-gray-200 p-2 shadow-inner">
+                    <div id="chart-container-calories" class="relative h-48 w-full block"><canvas id="calorieChart"></canvas></div>
+                    <div id="chart-container-weight" class="relative h-48 w-full hidden"><canvas id="weightChart"></canvas></div>
+                    <div id="chart-container-bp" class="relative h-48 w-full hidden"><canvas id="bpChart"></canvas></div>
+					<div id="chart-container-hr" class="relative h-48 w-full hidden"><canvas id="hrChart"></canvas></div>
+					<div id="chart-container-sodium" class="relative h-48 w-full hidden"><canvas id="sodiumChart"></canvas></div>
+                    <div id="chart-container-fats" class="relative h-48 w-full hidden"><canvas id="fatsChart"></canvas></div>
+					<div id="chart-container-net-carbs" class="relative h-48 w-full hidden"><canvas id="netCarbsChart"></canvas></div>
+                    <div id="chart-container-fiber" class="relative h-48 w-full hidden"><canvas id="fiberChart"></canvas></div>
+                    <div id="chart-container-sugar" class="relative h-48 w-full hidden"><canvas id="sugarChart"></canvas></div>
+					<div id="chart-container-macros" class="relative h-48 w-full hidden"><canvas id="macrosChart"></canvas></div>
+                    <div id="chart-container-burn" class="relative h-48 w-full hidden"><canvas id="burnChart"></canvas></div>
                 </div>
             </div>
-        </div>
-
-        <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">🔥 Calories In vs Out</h3>
-                <div class="bg-gray-100 rounded-lg p-1 flex text-xs font-bold" id="cal-time-filters">
-                    <button onclick="setCalorieRange(7)" id="cal-btn-7" class="px-3 py-1 rounded bg-white shadow-sm text-emerald-600 transition-colors">1W</button>
-                    <button onclick="setCalorieRange(30)" id="cal-btn-30" class="px-3 py-1 rounded text-gray-400 hover:text-gray-600 transition-colors">1M</button>
-                    <button onclick="setCalorieRange(365)" id="cal-btn-365" class="px-3 py-1 rounded text-gray-400 hover:text-gray-600 transition-colors">1Y</button>
-                </div>
-            </div>
-            <div class="relative h-48 w-full">
-                <canvas id="calorieChart"></canvas>
-            </div>
-        </div>
 		
-		<!-- BLOOD PRESSURE TRENDS CARD -->
-        <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">❤️ Blood Pressure Trends</h3>
-                <span class="text-xs text-gray-400 font-medium">Last 7 Readings</span>
-            </div>
-            <div class="relative h-48 w-full">
-                <canvas id="bpChart"></canvas>
-            </div>
-        </div>
-		
-		<div class="flex justify-between items-center mb-3">
-            <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Today's Activity</h3>
-            <div class="flex gap-2">
-                <button onclick="openBPModal()" class="bg-rose-100 hover:bg-rose-200 text-rose-700 text-xs font-bold py-1.5 px-3 rounded-lg transition-colors shadow-sm">
-                    + Log Vitals
+		<div class="mt-4">
+            <div class="flex justify-between items-center mb-2 px-1">
+                <button onclick="toggleHistory()" class="flex items-center gap-2 focus:outline-none group">
+                    <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider group-hover:text-emerald-600 transition-colors">Today's Activity</h3>
+                    <span id="history-chevron" class="text-gray-400 transform transition-transform duration-300 text-xs">▼</span>
                 </button>
-                <button onclick="openWorkoutModal()" class="bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-bold py-1.5 px-3 rounded-lg transition-colors shadow-sm">
-                    + Log Workout
-                </button>
+                <div class="flex gap-2">
+                    <button onclick="openBPModal()" class="bg-rose-100 hover:bg-rose-200 text-rose-700 text-[10px] font-bold py-1 px-2 rounded-md transition-colors shadow-sm">+ Vitals</button>
+                    <button onclick="openWorkoutModal()" class="bg-blue-100 hover:bg-blue-200 text-blue-700 text-[10px] font-bold py-1 px-2 rounded-md transition-colors shadow-sm">+ Workout</button>
+                </div>
+            </div>
+            
+            <div id="history-wrapper" class="transition-all duration-300 origin-top">
+                <div id="history-container" class="space-y-2 overflow-y-auto max-h-56 pb-4">
+                    <p class="text-xs text-gray-400 italic">No activity logged yet.</p>
+                </div>
             </div>
         </div>
-        <div id="history-container" class="space-y-2 overflow-y-auto max-h-48 pb-4">
-            <p class="text-xs text-gray-400 italic">No activity logged yet.</p>
-        </div>
-    </div>
 
     <div id="screen-capture" class="p-6 flex flex-col flex-grow justify-center items-center hidden pb-28">
         <h2 class="text-2xl font-bold text-gray-800 mb-2 text-center">Snap Your Meal</h2>
@@ -839,6 +863,11 @@
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Context / Medications (Optional)</label>
                     <textarea id="bp-context" placeholder="e.g., 'Took my lisinopril an hour ago' or 'Feeling stressed today'" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:border-rose-500 resize-none shadow-sm" rows="2"></textarea>
                 </div>
+				
+				<div class="mt-2">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Resting Heart Rate (BPM) - Optional</label>
+                    <input type="number" id="bp-hr" placeholder="e.g., 72" class="w-full bg-rose-50 border border-gray-300 rounded-xl px-4 py-3 text-xl text-center font-black text-rose-700 focus:outline-none focus:border-rose-500 shadow-sm">
+                </div>
 
                 <button onclick="calculateBP()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-3.5 rounded-xl mt-4 shadow-md transition-colors">
                     Analyze Vitals
@@ -874,8 +903,8 @@
 
 <script>
 
-    function navigateTo(screenId) {       
-	   if (navigator.vibrate) navigator.vibrate(15);
+    function navigateTo(screenId, skipVibrate = false) {       
+	   if (navigator.vibrate && !skipVibrate) navigator.vibrate(15);
 	   // Hide all major screens
         ['screen-welcome', 'screen-dashboard', 'screen-capture', 'screen-loading', 'screen-results'].forEach(id => {
             const el = document.getElementById(id);
@@ -926,18 +955,6 @@
         }
     }
 
-    window.saveGoalsAndEnter = function() {
-        // 1. Get all checked checkboxes
-        const selectedGoals = Array.from(document.querySelectorAll('input[name="goal"]:checked'))
-            .map(cb => cb.value);
-        
-        // 2. Save them to localStorage
-        localStorage.setItem('alitheaplate_goals', JSON.stringify(selectedGoals));
-        
-        // 3. Move to dashboard
-        navigateTo('screen-dashboard');
-    };
-
     function compressImage(file, maxWidth) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -965,6 +982,7 @@
     // --- DASHBOARD ENGINE ---
     let viewedDate = new Date(); // Global variable to track which day we are looking at
 	let pendingMeal = null;
+	let mealFilesArray = [];
 
     // --- CHART ENGINE ---
     let weightChartInstance = null;
@@ -1059,75 +1077,67 @@
         // 5. Turn the 'Next' arrow on or off depending on if we are in the present
         document.getElementById('chart-next-btn').disabled = (chartEndOffset <= 0);
     }
-	
-	// --- CALORIE CHART LOGIC ---
-    let calorieChartInstance = null;
-    let currentCalorieRange = 7; // Default to 1 Week
 
-    window.setCalorieRange = function(days) {
-        currentCalorieRange = days;
-        
-        // Update the visual styling of the toggle buttons
-        ['7', '30', '365'].forEach(d => {
-            const btn = document.getElementById(`cal-btn-${d}`);
-            if (btn) {
-                if (parseInt(d) === days) {
-                    btn.className = "px-3 py-1 rounded bg-white shadow-sm text-emerald-600 transition-colors";
-                } else {
-                    btn.className = "px-3 py-1 rounded text-gray-400 hover:text-gray-600 transition-colors";
-                }
-            }
-        });
-        
-        renderCalorieChart();
-    };
-
-    // --- BLOOD PRESSURE CHART LOGIC ---
+    // --- BLOOD PRESSURE CHART (1D & MULTI-DAY) ---
     let bpChartInstance = null;
 
     window.renderBPChart = function() {
         const ctx = document.getElementById('bpChart');
         if (!ctx) return;
-
-        if (bpChartInstance) {
-            bpChartInstance.destroy();
-        }
+        if (bpChartInstance) bpChartInstance.destroy();
 
         const dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
-        
         const labels = [];
-        const systolicData = [];
-        const diastolicData = [];
+        const sysData = [];
+        const diaData = [];
 
-        // Gather all vitals across logged dates
-        const sortedDates = Object.keys(dailyData).sort((a, b) => new Date(a) - new Date(b));
-        
-        let readingsCount = 0;
-        // Walk through dates to extract up to the last 7 BP entries
-        for (const dateStr of sortedDates) {
-            const dayData = dailyData[dateStr];
-            if (dayData && dayData.vitals && Array.isArray(dayData.vitals)) {
-                // Vitals are unshifted (newest first), so copy and reverse to plot chronologically
-                const dayVitals = [...dayData.vitals].reverse();
-                
-                dayVitals.forEach(v => {
-                    if (v.type === "Blood Pressure" && readingsCount < 7) {
-                        labels.push(`${dateStr.split('/')[0]}/${dateStr.split('/')[1]} ${v.time}`);
-                        
-                        const numbers = v.reading.split('/');
-                        systolicData.push(parseInt(numbers[0]) || 0);
-                        diastolicData.push(parseInt(numbers[1]) || 0);
-                        readingsCount++;
+        if (globalChartRange === 1) {
+            // 1D VIEW: Plot today's readings by exact time
+            const todayStr = new Date().toLocaleDateString();
+            if (dailyData[todayStr] && dailyData[todayStr].vitals) {
+                // Reverse the array so the oldest reading of the day is on the left
+                const todaysVitals = [...dailyData[todayStr].vitals].reverse();
+                todaysVitals.forEach(v => {
+                    if (v.reading && v.type.includes("Blood Pressure")) {
+                        labels.push(v.time);
+                        const parts = v.reading.split('/');
+                        sysData.push(parts[0]);
+                        diaData.push(parts[1]);
                     }
                 });
             }
-        }
+        } else {
+            // MULTI-DAY VIEW: Plot the most recent reading of each day
+            const today = new Date();
+            for (let i = globalChartRange - 1; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(today.getDate() - i);
+                const dateStr = d.toLocaleDateString();
+                
+                let labelStr = '';
+                if (globalChartRange === 7) labelStr = d.toLocaleDateString([], { weekday: 'short' });
+                else if (globalChartRange === 30) labelStr = (i % 5 === 0) ? d.toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
+                else if (globalChartRange === 365) labelStr = (d.getDate() === 1) ? d.toLocaleDateString([], { month: 'short' }) : '';
+                else labelStr = (d.getMonth() === 0 && d.getDate() === 1) ? d.getFullYear().toString() : '';
+                
+                labels.push(labelStr);
 
-        // If no data exists yet, show an empty state visual placeholder
-        if (systolicData.length === 0) {
-            labels.push("No Data");
-            systolicData.push(120);
-            diastolicData.push(80);
+                if (dailyData[dateStr] && dailyData[dateStr].vitals && dailyData[dateStr].vitals.length > 0) {
+                    // Grab the most recent BP reading saved that day
+                    const bpReading = dailyData[dateStr].vitals.find(v => v.type.includes("Blood Pressure"));
+                    if (bpReading) {
+                        const parts = bpReading.reading.split('/');
+                        sysData.push(parts[0]);
+                        diaData.push(parts[1]);
+                    } else {
+                        sysData.push(null);
+                        diaData.push(null);
+                    }
+                } else {
+                    sysData.push(null);
+                    diaData.push(null);
+                }
+            }
         }
 
         bpChartInstance = new Chart(ctx, {
@@ -1135,157 +1145,159 @@
             data: {
                 labels: labels,
                 datasets: [
-                    {
-                        label: 'Systolic (Top)',
-                        data: systolicData,
-                        borderColor: '#e11d48', // Tailwind Rose-600
-                        backgroundColor: 'rgba(225, 29, 72, 0.05)',
-                        borderWidth: 3,
-                        pointBackgroundColor: '#e11d48',
-                        tension: 0.3,
-                        fill: true
-                    },
-                    {
-                        label: 'Diastolic (Bottom)',
-                        data: diastolicData,
-                        borderColor: '#2563eb', // Tailwind Blue-600
-                        backgroundColor: 'rgba(37, 99, 235, 0.05)',
-                        borderWidth: 3,
-                        pointBackgroundColor: '#2563eb',
-                        tension: 0.3,
-                        fill: true
-                    }
+                    { label: 'Systolic', data: sysData, borderColor: '#e11d48', backgroundColor: '#e11d48', borderWidth: 3, tension: 0.3, spanGaps: true },
+                    { label: 'Diastolic', data: diaData, borderColor: '#2563eb', backgroundColor: '#2563eb', borderWidth: 3, tension: 0.3, spanGaps: true }
                 ]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 scales: {
-                    y: {
-                        min: 40,
-                        max: 180,
-                        grid: { color: '#f3f4f6', drawBorder: false },
-                        ticks: { font: { size: 10 }, color: '#9ca3af' }
-                    },
-                    x: {
-                        grid: { display: false, drawBorder: false },
-                        ticks: { font: { size: 9 }, color: '#9ca3af' }
-                    }
+                    y: { min: 40, max: 180, grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 }, color: '#9ca3af' } },
+                    x: { grid: { display: false }, ticks: { font: { size: 9 }, color: '#9ca3af', autoSkip: globalChartRange > 1 } }
                 },
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { usePointStyle: true, boxWidth: 6, font: { size: 11 } }
-                    }
-                }
+                plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 6, font: { size: 11 } } } }
             }
         });
     };
-	
-	renderBPChart();
-	
-	window.renderCalorieChart = function() {
-        const ctx = document.getElementById('calorieChart');
-        if (!ctx) return;
 
-        // Clear the old chart if it exists so they don't overlap
-        if (calorieChartInstance) {
-            calorieChartInstance.destroy();
-        }
+    // --- HEART RATE CHART (1D & MULTI-DAY) ---
+    let hrChartInstance = null;
+
+    window.renderHRChart = function() {
+        const ctx = document.getElementById('hrChart');
+        if (!ctx) return;
+        if (hrChartInstance) hrChartInstance.destroy();
 
         const dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
-        
+        const labels = [];
+        const hrData = [];
+
+        if (globalChartRange === 1) {
+            const todayStr = new Date().toLocaleDateString();
+            if (dailyData[todayStr] && dailyData[todayStr].vitals) {
+                const todaysVitals = [...dailyData[todayStr].vitals].reverse();
+                todaysVitals.forEach(v => {
+                    if (v.hr && v.hr !== "Not provided") {
+                        labels.push(v.time);
+                        hrData.push(v.hr);
+                    }
+                });
+            }
+        } else {
+            const today = new Date();
+            for (let i = globalChartRange - 1; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(today.getDate() - i);
+                const dateStr = d.toLocaleDateString();
+                
+                let labelStr = '';
+                if (globalChartRange === 7) labelStr = d.toLocaleDateString([], { weekday: 'short' });
+                else if (globalChartRange === 30) labelStr = (i % 5 === 0) ? d.toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
+                else if (globalChartRange === 365) labelStr = (d.getDate() === 1) ? d.toLocaleDateString([], { month: 'short' }) : '';
+                else labelStr = (d.getMonth() === 0 && d.getDate() === 1) ? d.getFullYear().toString() : '';
+                
+                labels.push(labelStr);
+
+                let dailyHR = null;
+                if (dailyData[dateStr] && dailyData[dateStr].vitals) {
+                    const vitalWithHR = dailyData[dateStr].vitals.find(v => v.hr && v.hr !== "Not provided");
+                    if (vitalWithHR) dailyHR = vitalWithHR.hr;
+                }
+                hrData.push(dailyHR);
+            }
+        }
+
+        hrChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{ label: 'Heart Rate (BPM)', data: hrData, borderColor: '#f43f5e', backgroundColor: 'rgba(244, 63, 94, 0.2)', borderWidth: 3, tension: 0.4, fill: true, spanGaps: true }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { suggestedMin: 40, suggestedMax: 120, grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 }, color: '#9ca3af' } },
+                    x: { grid: { display: false }, ticks: { font: { size: 9 }, color: '#9ca3af', autoSkip: globalChartRange > 1 } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    };
+
+    // --- CALORIE CHART (1D TIMELINE & MULTI-DAY) ---
+    let calorieChartInstance = null;
+
+    window.renderCalorieChart = function() {
+        const ctx = document.getElementById('calorieChart');
+        if (!ctx) return;
+        if (calorieChartInstance) calorieChartInstance.destroy();
+
+        const dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
         const labels = [];
         const intakeData = [];
         const burnedData = [];
 
-        // Loop backward through time based on the selected range
-        const today = new Date();
-        for (let i = currentCalorieRange - 1; i >= 0; i--) {
-            const d = new Date(today);
-            d.setDate(today.getDate() - i);
-            const dateStr = d.toLocaleDateString();
+        if (globalChartRange === 1) {
+            // 1D VIEW: Create a chronological timeline of today's meals and workouts
+            const todayStr = new Date().toLocaleDateString();
+            const dayData = dailyData[todayStr] || {};
             
-            // Format dates (e.g., "5/24")
-            labels.push(d.toLocaleDateString([], { month: 'numeric', day: 'numeric' }));
+            // Collect all events and sort them by the time they were logged
+            let events = [];
+            if (dayData.meals) dayData.meals.forEach(m => events.push({ time: m.time, intake: m.calories, burn: 0 }));
+            if (dayData.workouts) dayData.workouts.forEach(w => events.push({ time: w.time, intake: 0, burn: w.calories }));
             
-            const dayData = dailyData[dateStr] || {};
-            
-            // Tally up total meal calories
-            let dailyIntake = 0;
-            if (dayData.meals && Array.isArray(dayData.meals)) {
-                dayData.meals.forEach(m => {
-                    dailyIntake += Number(m.calories) || 0;
-                });
-            }
-            intakeData.push(dailyIntake);
+            // Standardize AM/PM time for sorting
+            events.sort((a, b) => new Date('1970/01/01 ' + a.time) - new Date('1970/01/01 ' + b.time));
 
-            // Tally up total workout calories
-            let dailyBurned = 0;
-            if (dayData.workouts && Array.isArray(dayData.workouts)) {
-                dayData.workouts.forEach(w => {
-                    dailyBurned += Number(w.calories) || 0;
-                });
+            events.forEach(e => {
+                labels.push(e.time);
+                intakeData.push(e.intake);
+                burnedData.push(e.burn);
+            });
+        } else {
+            // MULTI-DAY VIEW: 
+            const today = new Date();
+            for (let i = globalChartRange - 1; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(today.getDate() - i);
+                const dateStr = d.toLocaleDateString();
+                
+                let labelStr = '';
+                if (globalChartRange === 7) labelStr = d.toLocaleDateString([], { weekday: 'short' });
+                else if (globalChartRange === 30) labelStr = (i % 5 === 0) ? d.toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
+                else if (globalChartRange === 365) labelStr = (d.getDate() === 1) ? d.toLocaleDateString([], { month: 'short' }) : '';
+                else labelStr = (d.getMonth() === 0 && d.getDate() === 1) ? d.getFullYear().toString() : '';
+                
+                labels.push(labelStr);
+                
+                const dayData = dailyData[dateStr] || {};
+                let dailyIntake = 0, dailyBurned = 0;
+                
+                if (dayData.meals) dayData.meals.forEach(m => dailyIntake += Number(m.calories) || 0);
+                if (dayData.workouts) dayData.workouts.forEach(w => dailyBurned += Number(w.calories) || 0);
+                
+                intakeData.push(dailyIntake);
+                burnedData.push(dailyBurned);
             }
-            burnedData.push(dailyBurned);
         }
 
-        // Draw the dual-bar chart
         calorieChartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: labels,
                 datasets: [
-                    {
-                        label: 'Intake (kcal)',
-                        data: intakeData,
-                        backgroundColor: 'rgba(52, 211, 153, 0.8)', // Tailwind Emerald-400
-                        borderRadius: 4,
-                        barPercentage: 0.7
-                    },
-                    {
-                        label: 'Burned (kcal)',
-                        data: burnedData,
-                        backgroundColor: 'rgba(251, 146, 60, 0.8)', // Tailwind Orange-400
-                        borderRadius: 4,
-                        barPercentage: 0.7
-                    }
+                    { label: 'Intake (kcal)', data: intakeData, backgroundColor: 'rgba(52, 211, 153, 0.8)', borderRadius: 4 },
+                    { label: 'Burned (kcal)', data: burnedData, backgroundColor: 'rgba(251, 146, 60, 0.8)', borderRadius: 4 }
                 ]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: '#f3f4f6', drawBorder: false },
-                        ticks: { font: { size: 10 }, color: '#9ca3af' }
-                    },
-                    x: {
-                        grid: { display: false, drawBorder: false },
-                        ticks: { 
-                            font: { size: 10 }, 
-                            color: '#9ca3af',
-                            maxTicksLimit: currentCalorieRange === 7 ? 7 : (currentCalorieRange === 30 ? 15 : 12)
-                        }
-                    }
+                    y: { beginAtZero: true, grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 }, color: '#9ca3af' } },
+                    x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#9ca3af', autoSkip: globalChartRange > 1 } }
                 },
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } }
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        backgroundColor: 'rgba(17, 24, 39, 0.9)',
-                        titleFont: { size: 13 },
-                        bodyFont: { size: 12 },
-                        padding: 10,
-                        cornerRadius: 8
-                    }
-                },
-                interaction: { mode: 'nearest', axis: 'x', intersect: false }
+                plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } } } }
             }
         });
     };
@@ -1664,6 +1676,7 @@
     window.openBPModal = function() {
         document.getElementById('bp-systolic').value = '';
         document.getElementById('bp-diastolic').value = '';
+		document.getElementById('bp-hr').value = '';
         document.getElementById('bp-context').value = '';
         
         document.getElementById('bp-input-section').classList.remove('hidden');
@@ -1681,6 +1694,7 @@
     window.calculateBP = async function() {
         const sys = document.getElementById('bp-systolic').value;
         const dia = document.getElementById('bp-diastolic').value;
+		const hr = document.getElementById('bp-hr').value || "Not provided";
         const userCtx = document.getElementById('bp-context').value.trim();
 
         if (!sys || !dia) {
@@ -1702,7 +1716,7 @@
         const userName = profile.name || "there";
         const bpPrompt = `You are an expert, empathetic medical AI assistant.
         The user's name is ${userName}. Address them by name to provide a comforting and personal touch.
-        The user (Age: ${profile.age || "Unknown"}, Sex: ${profile.sex || "Unknown"}) just recorded a blood pressure reading of ${sys}/${dia}.
+        The user (Age: ${profile.age || "Unknown"}, Sex: ${profile.sex || "Unknown"}) just recorded a blood pressure reading of ${sys}/${dia} and a Heart Rate of ${hr} BPM.
 
         User's direct context/medications for today: "${userCtx}"
         Meals logged today: ${recentMeals}
@@ -1735,6 +1749,7 @@
             pendingBP = {
                 sys: sys,
                 dia: dia,
+				hr: hr,
                 status: result.status,
                 feedback: result.feedback
             };
@@ -1772,6 +1787,7 @@
             time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
             type: "Blood Pressure",
             reading: `${pendingBP.sys}/${pendingBP.dia}`,
+			hr: pendingBP.hr,
             status: pendingBP.status,
             feedback: pendingBP.feedback
         });
@@ -2179,18 +2195,18 @@
 	
 	// Initialize App on load
     window.onload = () => {
-        let dailyData = localStorage.getItem('alitheaplate_daily');
+        let savedProfile = localStorage.getItem('alitheaplate_profile');
         
-        if (dailyData) {
+        if (savedProfile) {
             // Returning user: Set dashboard greeting and go to dashboard
             const dashMsg = document.getElementById('dashboard-message');
             if (dashMsg) dashMsg.innerText = "Welcome back. Let’s find the truth in today’s progress.";
-            navigateTo('screen-dashboard');
+            navigateTo('screen-dashboard', true); // <--- Added 'true' here
         } else {
             // First time user: Set welcome greeting and go to welcome screen
             const welcomeMsg = document.getElementById('welcome-message');
             if (welcomeMsg) welcomeMsg.innerText = "Welcome to Alithea Wellness! Named for the Greek word for 'Truth,' we’re here to help you uncover the reality behind your fitness and nutrition goals, through data you can trust!";
-            navigateTo('screen-welcome');
+            navigateTo('screen-welcome', true); // <--- Added 'true' here
         }
     }; 
 
@@ -2256,6 +2272,7 @@
 			meal: mealData.meal,
             score: mealData.score,
             calories: mealData.calories,
+			macros: mealData.macros || {},
             positives: mealData.positives || [],
             negatives: mealData.negatives || [],
             recommendation: mealData.recommendation || "",
@@ -2356,6 +2373,18 @@
                    "meal_identified": "Name of meal or recipe",
                    "health_score": number 0-100,
                    "calories": number,
+                   "macros": {
+                       "protein_g": number,
+                       "carbs_total_g": number,
+                       "carbs_net_g": number,
+                       "fiber_g": number,
+                       "sugars_total_g": number,
+                       "fat_total_g": number,
+                       "fat_saturated_g": number,
+                       "fat_unsaturated_g": number,
+                       "cholesterol_mg": number,
+                       "sodium_mg": number
+                   },
                    "targeted_metrics": [
                        {
                            "name": "Target Metric Name (e.g., Sodium, Protein, Net Carbs)",
@@ -2425,6 +2454,7 @@
                 meal: result.meal_identified,
                 score: result.health_score,
                 calories: result.calories || 0,
+				macros: result.macros || {},
                 positives: result.positives,
                 negatives: result.negatives,
                 recommendation: result.recommendation
@@ -2548,6 +2578,7 @@
                 meal: pendingMeal.meal,
                 score: pendingMeal.score,
                 calories: pendingMeal.calories,
+				macros: pendingMeal.macros || {},
                 positives: pendingMeal.positives || [],
                 negatives: pendingMeal.negatives || [],
                 recommendation: pendingMeal.recommendation || ""
@@ -2701,6 +2732,611 @@ END:VCALENDAR`.replace(/\n/g, '\r\n');
         document.body.removeChild(link);
         
         alert("Downloading reminder! Your phone should prompt you to add this daily event to your calendar.");
+    };
+	
+	// --- SMART CHART HUB LOGIC ---
+    window.switchChart = function(selectedType) {
+        if (navigator.vibrate) navigator.vibrate(10);
+        
+        // Hide all canvases and control menus
+        ['calories', 'weight', 'bp', 'hr', 'sodium', 'fats', 'net-carbs', 'fiber', 'sugar', 'macros', 'burn'].forEach(type => {
+            const container = document.getElementById(`chart-container-${type}`);
+            if (container) {
+                container.classList.remove('block');
+                container.classList.add('hidden');
+            }
+        });
+        
+        document.getElementById('weight-controls').classList.add('hidden');
+        document.getElementById('calorie-controls').classList.add('hidden');
+
+        // Show the selected ones
+        document.getElementById(`chart-container-${selectedType}`).classList.remove('hidden');
+        document.getElementById(`chart-container-${selectedType}`).classList.add('block');
+        
+        if (selectedType === 'weight') document.getElementById('weight-controls').classList.remove('hidden');
+        if (selectedType === 'calories') document.getElementById('calorie-controls').classList.remove('hidden');
+		if (selectedType === 'sodium') renderSodiumChart();
+        if (selectedType === 'fats') renderFatsChart();
+		if (selectedType === 'net-carbs') renderNetCarbsChart();
+        if (selectedType === 'fiber') renderFiberChart();
+        if (selectedType === 'sugar') renderSugarChart();
+		if (selectedType === 'macros') renderMacrosChart();
+        if (selectedType === 'burn') renderBurnChart();
+		if (selectedType === 'hr') renderHRChart();
+    };
+	
+	// --- SODIUM CHART LOGIC ---
+    let sodiumChartInstance = null;
+
+    window.renderSodiumChart = function() {
+        const ctx = document.getElementById('sodiumChart');
+        if (!ctx) return;
+        if (sodiumChartInstance) sodiumChartInstance.destroy();
+
+        const dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
+        const labels = [];
+        const sodiumData = [];
+        const today = new Date();
+
+        for (let i = globalChartRange - 1; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(today.getDate() - i);
+            const dateStr = d.toLocaleDateString();
+            
+            // Smart Label Formatting so the text doesn't overlap
+            let labelStr = '';
+            if (globalChartRange === 7) {
+                labelStr = d.toLocaleDateString([], { weekday: 'short' });
+            } else if (globalChartRange === 30) {
+                labelStr = (i % 5 === 0) ? d.toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
+            } else if (globalChartRange === 365) {
+                labelStr = (d.getDate() === 1) ? d.toLocaleDateString([], { month: 'short' }) : '';
+            } else {
+                // 5-Year view: Only show the year on January 1st
+                labelStr = (d.getMonth() === 0 && d.getDate() === 1) ? d.getFullYear().toString() : '';
+            }
+            labels.push(labelStr);
+
+            let dailySodium = 0;
+            if (dailyData[dateStr] && dailyData[dateStr].meals) {
+                dailyData[dateStr].meals.forEach(m => {
+                    if (m.macros && m.macros.sodium_mg) dailySodium += Number(m.macros.sodium_mg);
+                });
+            }
+            sodiumData.push(dailySodium);
+        }
+
+        sodiumChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Sodium (mg)',
+                    data: sodiumData,
+                    backgroundColor: 'rgba(14, 165, 233, 0.8)', // Tailwind Sky-500
+                    borderRadius: 4,
+                    barPercentage: 0.6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { 
+                        beginAtZero: true,						
+                        suggestedMax: 2300,
+						grid: { color: '#f3f4f6', drawBorder: false },
+                        ticks: { font: { size: 10 }, color: '#9ca3af' }
+                    },
+                    x: { 
+                        grid: { display: false, drawBorder: false },
+                        ticks: { font: { size: 10 }, color: '#9ca3af' }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { backgroundColor: 'rgba(17, 24, 39, 0.9)', padding: 10, cornerRadius: 8 }
+                }
+            }
+        });
+    };
+
+    // --- FAT BREAKDOWN CHART LOGIC ---
+    let fatsChartInstance = null;
+
+    window.renderFatsChart = function() {
+        const ctx = document.getElementById('fatsChart');
+        if (!ctx) return;
+        if (fatsChartInstance) fatsChartInstance.destroy();
+
+        const dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
+        const labels = [];
+        const satFatData = [];
+        const unsatFatData = [];
+        const today = new Date();
+
+        for (let i = globalChartRange - 1; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(today.getDate() - i);
+            const dateStr = d.toLocaleDateString();
+            
+            // Smart Label Formatting so the text doesn't overlap
+            let labelStr = '';
+            if (globalChartRange === 7) {
+                labelStr = d.toLocaleDateString([], { weekday: 'short' });
+            } else if (globalChartRange === 30) {
+                labelStr = (i % 5 === 0) ? d.toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
+            } else if (globalChartRange === 365) {
+                labelStr = (d.getDate() === 1) ? d.toLocaleDateString([], { month: 'short' }) : '';
+            } else {
+                // 5-Year view: Only show the year on January 1st
+                labelStr = (d.getMonth() === 0 && d.getDate() === 1) ? d.getFullYear().toString() : '';
+            }
+            labels.push(labelStr);
+
+            let dailySat = 0;
+            let dailyUnsat = 0;
+            if (dailyData[dateStr] && dailyData[dateStr].meals) {
+                dailyData[dateStr].meals.forEach(m => {
+                    if (m.macros) {
+                        if (m.macros.fat_saturated_g) dailySat += Number(m.macros.fat_saturated_g);
+                        if (m.macros.fat_unsaturated_g) dailyUnsat += Number(m.macros.fat_unsaturated_g);
+                    }
+                });
+            }
+            satFatData.push(dailySat);
+            unsatFatData.push(dailyUnsat);
+        }
+
+        fatsChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Saturated Fat (g)',
+                        data: satFatData,
+                        backgroundColor: 'rgba(244, 63, 94, 0.8)', // Tailwind Rose-500 (Warning color)
+                        borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 4, bottomRight: 4 }
+                    },
+                    {
+                        label: 'Unsaturated Fat (g)',
+                        data: unsatFatData,
+                        backgroundColor: 'rgba(16, 185, 129, 0.8)', // Tailwind Emerald-500 (Healthy color)
+                        borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 0, bottomRight: 0 }
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { 
+                        stacked: true, 
+                        grid: { display: false, drawBorder: false },
+                        ticks: { font: { size: 10 }, color: '#9ca3af' }
+                    },
+                    y: { 
+                        stacked: true, 
+                        beginAtZero: true,
+                        grid: { color: '#f3f4f6', drawBorder: false },
+                        ticks: { font: { size: 10 }, color: '#9ca3af' }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } } },
+                    tooltip: { mode: 'index', intersect: false, backgroundColor: 'rgba(17, 24, 39, 0.9)', padding: 10, cornerRadius: 8 }
+                }
+            }
+        });
+    };
+	
+	// --- NET CARBS CHART LOGIC ---
+    let netCarbsChartInstance = null;
+
+    window.renderNetCarbsChart = function() {
+        const ctx = document.getElementById('netCarbsChart');
+        if (!ctx) return;
+        if (netCarbsChartInstance) netCarbsChartInstance.destroy();
+
+        const dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
+        const labels = [];
+        const carbsData = [];
+        const today = new Date();
+
+        for (let i = globalChartRange - 1; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(today.getDate() - i);
+            const dateStr = d.toLocaleDateString();
+            
+            // Smart Label Formatting so the text doesn't overlap
+            let labelStr = '';
+            if (globalChartRange === 7) {
+                labelStr = d.toLocaleDateString([], { weekday: 'short' });
+            } else if (globalChartRange === 30) {
+                labelStr = (i % 5 === 0) ? d.toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
+            } else if (globalChartRange === 365) {
+                labelStr = (d.getDate() === 1) ? d.toLocaleDateString([], { month: 'short' }) : '';
+            } else {
+                // 5-Year view: Only show the year on January 1st
+                labelStr = (d.getMonth() === 0 && d.getDate() === 1) ? d.getFullYear().toString() : '';
+            }
+            labels.push(labelStr);
+
+            let dailyCarbs = 0;
+            if (dailyData[dateStr] && dailyData[dateStr].meals) {
+                dailyData[dateStr].meals.forEach(m => {
+                    if (m.macros && m.macros.carbs_net_g) dailyCarbs += Number(m.macros.carbs_net_g);
+                });
+            }
+            carbsData.push(dailyCarbs);
+        }
+
+        netCarbsChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Net Carbs (g)',
+                    data: carbsData,
+                    backgroundColor: 'rgba(168, 85, 247, 0.8)', // Tailwind Purple-500
+                    borderRadius: 4,
+                    barPercentage: 0.6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f3f4f6', drawBorder: false }, ticks: { font: { size: 10 }, color: '#9ca3af' } },
+                    x: { grid: { display: false, drawBorder: false }, ticks: { font: { size: 10 }, color: '#9ca3af' } }
+                },
+                plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(17, 24, 39, 0.9)', padding: 10, cornerRadius: 8 } }
+            }
+        });
+    };
+
+    // --- FIBER CHART LOGIC ---
+    let fiberChartInstance = null;
+
+    window.renderFiberChart = function() {
+        const ctx = document.getElementById('fiberChart');
+        if (!ctx) return;
+        if (fiberChartInstance) fiberChartInstance.destroy();
+
+        const dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
+        const labels = [];
+        const fiberData = [];
+        const today = new Date();
+
+        for (let i = globalChartRange - 1; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(today.getDate() - i);
+            const dateStr = d.toLocaleDateString();
+            
+            // Smart Label Formatting so the text doesn't overlap
+            let labelStr = '';
+            if (globalChartRange === 7) {
+                labelStr = d.toLocaleDateString([], { weekday: 'short' });
+            } else if (globalChartRange === 30) {
+                labelStr = (i % 5 === 0) ? d.toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
+            } else if (globalChartRange === 365) {
+                labelStr = (d.getDate() === 1) ? d.toLocaleDateString([], { month: 'short' }) : '';
+            } else {
+                // 5-Year view: Only show the year on January 1st
+                labelStr = (d.getMonth() === 0 && d.getDate() === 1) ? d.getFullYear().toString() : '';
+            }
+            labels.push(labelStr);
+
+            let dailyFiber = 0;
+            if (dailyData[dateStr] && dailyData[dateStr].meals) {
+                dailyData[dateStr].meals.forEach(m => {
+                    if (m.macros && m.macros.fiber_g) dailyFiber += Number(m.macros.fiber_g);
+                });
+            }
+            fiberData.push(dailyFiber);
+        }
+
+        fiberChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Fiber (g)',
+                    data: fiberData,
+                    backgroundColor: 'rgba(34, 197, 94, 0.8)', // Tailwind Green-500
+                    borderRadius: 4,
+                    barPercentage: 0.6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        suggestedMax: 30, // FDA recommended daily fiber target
+                        grid: { color: '#f3f4f6', drawBorder: false }, 
+                        ticks: { font: { size: 10 }, color: '#9ca3af' } 
+                    },
+                    x: { grid: { display: false, drawBorder: false }, ticks: { font: { size: 10 }, color: '#9ca3af' } }
+                },
+                plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(17, 24, 39, 0.9)', padding: 10, cornerRadius: 8 } }
+            }
+        });
+    };
+
+    // --- SUGAR CHART LOGIC ---
+    let sugarChartInstance = null;
+
+    window.renderSugarChart = function() {
+        const ctx = document.getElementById('sugarChart');
+        if (!ctx) return;
+        if (sugarChartInstance) sugarChartInstance.destroy();
+
+        const dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
+        const labels = [];
+        const sugarData = [];
+        const today = new Date();
+
+        for (let i = globalChartRange - 1; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(today.getDate() - i);
+            const dateStr = d.toLocaleDateString();
+            
+            // Smart Label Formatting so the text doesn't overlap
+            let labelStr = '';
+            if (globalChartRange === 7) {
+                labelStr = d.toLocaleDateString([], { weekday: 'short' });
+            } else if (globalChartRange === 30) {
+                labelStr = (i % 5 === 0) ? d.toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
+            } else if (globalChartRange === 365) {
+                labelStr = (d.getDate() === 1) ? d.toLocaleDateString([], { month: 'short' }) : '';
+            } else {
+                // 5-Year view: Only show the year on January 1st
+                labelStr = (d.getMonth() === 0 && d.getDate() === 1) ? d.getFullYear().toString() : '';
+            }
+            labels.push(labelStr);
+
+            let dailySugar = 0;
+            if (dailyData[dateStr] && dailyData[dateStr].meals) {
+                dailyData[dateStr].meals.forEach(m => {
+                    if (m.macros && m.macros.sugars_total_g) dailySugar += Number(m.macros.sugars_total_g);
+                });
+            }
+            sugarData.push(dailySugar);
+        }
+
+        sugarChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Total Sugars (g)',
+                    data: sugarData,
+                    backgroundColor: 'rgba(236, 72, 153, 0.8)', // Tailwind Pink-500
+                    borderRadius: 4,
+                    barPercentage: 0.6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        suggestedMax: 50, // General recommended upper limit
+                        grid: { color: '#f3f4f6', drawBorder: false }, 
+                        ticks: { font: { size: 10 }, color: '#9ca3af' } 
+                    },
+                    x: { grid: { display: false, drawBorder: false }, ticks: { font: { size: 10 }, color: '#9ca3af' } }
+                },
+                plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(17, 24, 39, 0.9)', padding: 10, cornerRadius: 8 } }
+            }
+        });
+    };
+	
+	// --- MACROS CHART LOGIC ---
+    let macrosChartInstance = null;
+
+    window.renderMacrosChart = function() {
+        const ctx = document.getElementById('macrosChart');
+        if (!ctx) return;
+        if (macrosChartInstance) macrosChartInstance.destroy();
+
+        const dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
+        const labels = [];
+        const proteinData = [];
+        const carbsData = [];
+        const fatData = [];
+        const today = new Date();
+
+        for (let i = globalChartRange - 1; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(today.getDate() - i);
+            const dateStr = d.toLocaleDateString();
+            
+            // Smart Label Formatting so the text doesn't overlap
+            let labelStr = '';
+            if (globalChartRange === 7) {
+                labelStr = d.toLocaleDateString([], { weekday: 'short' });
+            } else if (globalChartRange === 30) {
+                labelStr = (i % 5 === 0) ? d.toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
+            } else if (globalChartRange === 365) {
+                labelStr = (d.getDate() === 1) ? d.toLocaleDateString([], { month: 'short' }) : '';
+            } else {
+                // 5-Year view: Only show the year on January 1st
+                labelStr = (d.getMonth() === 0 && d.getDate() === 1) ? d.getFullYear().toString() : '';
+            }
+            labels.push(labelStr);
+
+            let dailyProtein = 0, dailyCarbs = 0, dailyFat = 0;
+            if (dailyData[dateStr] && dailyData[dateStr].meals) {
+                dailyData[dateStr].meals.forEach(m => {
+                    if (m.macros) {
+                        if (m.macros.protein_g) dailyProtein += Number(m.macros.protein_g);
+                        if (m.macros.carbs_total_g) dailyCarbs += Number(m.macros.carbs_total_g);
+                        if (m.macros.fat_total_g) dailyFat += Number(m.macros.fat_total_g);
+                    }
+                });
+            }
+            proteinData.push(dailyProtein);
+            carbsData.push(dailyCarbs);
+            fatData.push(dailyFat);
+        }
+
+        macrosChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Protein (g)', data: proteinData, backgroundColor: 'rgba(59, 130, 246, 0.8)', borderRadius: { bottomLeft: 4, bottomRight: 4 } }, // Blue
+                    { label: 'Carbs (g)', data: carbsData, backgroundColor: 'rgba(245, 158, 11, 0.8)', borderRadius: 0 }, // Amber
+                    { label: 'Fat (g)', data: fatData, backgroundColor: 'rgba(239, 68, 68, 0.8)', borderRadius: { topLeft: 4, topRight: 4 } } // Red
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    x: { stacked: true, grid: { display: false, drawBorder: false }, ticks: { font: { size: 10 }, color: '#9ca3af' } },
+                    y: { stacked: true, beginAtZero: true, grid: { color: '#f3f4f6', drawBorder: false }, ticks: { font: { size: 10 }, color: '#9ca3af' } }
+                },
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } } },
+                    tooltip: { mode: 'index', intersect: false, backgroundColor: 'rgba(17, 24, 39, 0.9)', padding: 10, cornerRadius: 8 }
+                }
+            }
+        });
+    };
+
+    // --- ACTIVE VS RESTING BURN LOGIC ---
+    let burnChartInstance = null;
+
+    window.renderBurnChart = function() {
+        const ctx = document.getElementById('burnChart');
+        if (!ctx) return;
+        if (burnChartInstance) burnChartInstance.destroy();
+
+        // Calculate User's BMR dynamically from their profile
+        const profile = JSON.parse(localStorage.getItem('alitheaplate_profile') || '{}');
+        let dailyBMR = 2000; // Fallback default
+        if (profile.weight && profile.age && profile.feet && profile.inches) {
+            const weightKg = profile.weight * 0.453592;
+            const heightCm = ((parseInt(profile.feet) * 12) + parseInt(profile.inches)) * 2.54;
+            if (profile.sex === 'female') {
+                dailyBMR = (10 * weightKg) + (6.25 * heightCm) - (5 * profile.age) - 161;
+            } else {
+                dailyBMR = (10 * weightKg) + (6.25 * heightCm) - (5 * profile.age) + 5;
+            }
+        }
+        dailyBMR = Math.round(dailyBMR);
+
+        const dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
+        const labels = [];
+        const restingData = [];
+        const activeData = [];
+        const today = new Date();
+
+        for (let i = globalChartRange - 1; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(today.getDate() - i);
+            const dateStr = d.toLocaleDateString();
+            
+            // Smart Label Formatting so the text doesn't overlap
+            let labelStr = '';
+            if (globalChartRange === 7) {
+                labelStr = d.toLocaleDateString([], { weekday: 'short' });
+            } else if (globalChartRange === 30) {
+                labelStr = (i % 5 === 0) ? d.toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
+            } else if (globalChartRange === 365) {
+                labelStr = (d.getDate() === 1) ? d.toLocaleDateString([], { month: 'short' }) : '';
+            } else {
+                // 5-Year view: Only show the year on January 1st
+                labelStr = (d.getMonth() === 0 && d.getDate() === 1) ? d.getFullYear().toString() : '';
+            }
+            labels.push(labelStr);
+
+            let dailyActive = 0;
+            if (dailyData[dateStr] && dailyData[dateStr].exercise) {
+                dailyActive = Number(dailyData[dateStr].exercise);
+            }
+            
+            restingData.push(dailyBMR);
+            activeData.push(dailyActive);
+        }
+
+        burnChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Resting Burn (BMR)',
+                        data: restingData,
+                        backgroundColor: 'rgba(156, 163, 175, 0.3)', // Subtle Gray
+                        borderRadius: { bottomLeft: 4, bottomRight: 4 }
+                    },
+                    {
+                        label: 'Active Burn (Exercise)',
+                        data: activeData,
+                        backgroundColor: 'rgba(249, 115, 22, 0.8)', // Orange
+                        borderRadius: { topLeft: 4, topRight: 4 }
+                    }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    x: { stacked: true, grid: { display: false, drawBorder: false }, ticks: { font: { size: 10 }, color: '#9ca3af' } },
+                    y: { stacked: true, beginAtZero: true, grid: { color: '#f3f4f6', drawBorder: false }, ticks: { font: { size: 10 }, color: '#9ca3af' } }
+                },
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } } },
+                    tooltip: { mode: 'index', intersect: false, backgroundColor: 'rgba(17, 24, 39, 0.9)', padding: 10, cornerRadius: 8 }
+                }
+            }
+        });
+    };
+	
+	// --- COLLAPSIBLE HISTORY LOGIC ---
+    window.toggleHistory = function() {
+        const wrapper = document.getElementById('history-wrapper');
+        const chevron = document.getElementById('history-chevron');
+        
+        if (wrapper.classList.contains('hidden')) {
+            wrapper.classList.remove('hidden');
+            chevron.classList.remove('-rotate-90');
+            if (navigator.vibrate) navigator.vibrate(10);
+        } else {
+            wrapper.classList.add('hidden');
+            chevron.classList.add('-rotate-90');
+            if (navigator.vibrate) navigator.vibrate(10);
+        }
+    };
+	
+	// --- UNIVERSAL CHART SCOPE LOGIC ---
+    let globalChartRange = 7; // Default to 1 Week
+
+    window.setGlobalChartRange = function(days) {
+        globalChartRange = days;
+        if (navigator.vibrate) navigator.vibrate(10);
+        
+        // Update button visual styles
+        [1, 7, 30, 365, 1825].forEach(d => {
+            const btn = document.getElementById(`global-btn-${d}`);
+            if (btn) {
+                if (d === days) {
+                    btn.className = "flex-1 px-2 py-1.5 rounded-md bg-white shadow-sm text-indigo-600 transition-colors";
+                } else {
+                    btn.className = "flex-1 px-2 py-1.5 rounded-md text-gray-400 hover:text-gray-600 transition-colors";
+                }
+            }
+        });
+        
+        // Find out which chart is currently open, and redraw it!
+        const activeChart = document.getElementById('chart-selector').value;
+        window.switchChart(activeChart); 
     };
 </script>
 </body>
