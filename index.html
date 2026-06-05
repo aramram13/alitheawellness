@@ -2753,7 +2753,8 @@ END:VCALENDAR`.replace(/\n/g, '\r\n');
         document.getElementById(`chart-container-${selectedType}`).classList.remove('hidden');
         document.getElementById(`chart-container-${selectedType}`).classList.add('block');
         
-        if (selectedType === 'bp') renderBPChart(); // Add this line!
+        if (selectedType === 'calories') renderCalorieChart();
+		if (selectedType === 'bp') renderBPChart(); // Add this line!
 		if (selectedType === 'weight') document.getElementById('weight-controls').classList.remove('hidden');
         if (selectedType === 'calories') document.getElementById('calorie-controls').classList.remove('hidden');
 		if (selectedType === 'sodium') renderSodiumChart();
