@@ -217,7 +217,7 @@
                         <option value="calories">Calories In vs Out</option>
                         <option value="weight">Morning Weight</option>
                         <option value="bp">Blood Pressure</option>
-						<option value="hr">Heart Rate (BPM)</option>
+						<option value="hr">Heart Rate / Pulse (BPM)</option>
 						<option value="sodium">Sodium Intake</option>
                         <option value="fats">Fat Breakdown (Sat vs Unsat)</option>
 						<option disabled>──────────</option>
@@ -865,7 +865,7 @@
                 </div>
 				
 				<div class="mt-2">
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Resting Heart Rate (BPM) - Optional</label>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Resting Heart Rate / Pulse (BPM) - Optional</label>
                     <input type="number" id="bp-hr" placeholder="e.g., 72" class="w-full bg-rose-50 border border-gray-300 rounded-xl px-4 py-3 text-xl text-center font-black text-rose-700 focus:outline-none focus:border-rose-500 shadow-sm">
                 </div>
 
@@ -1211,7 +1211,7 @@
             type: 'line',
             data: {
                 labels: labels,
-                datasets: [{ label: 'Heart Rate (BPM)', data: hrData, borderColor: '#f43f5e', backgroundColor: 'rgba(244, 63, 94, 0.2)', borderWidth: 3, tension: 0.4, fill: true, spanGaps: true }]
+                datasets: [{ label: 'Heart Rate / Pulse (BPM)', data: hrData, borderColor: '#f43f5e', backgroundColor: 'rgba(244, 63, 94, 0.2)', borderWidth: 3, tension: 0.4, fill: true, spanGaps: true }]
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
@@ -1375,9 +1375,8 @@
         const remainingEl = document.getElementById('calories-remaining');
         remainingEl.className = `text-3xl font-black ${remaining >= 0 ? 'text-emerald-600' : 'text-red-500'}`;
 
-        // Draw the weight chart for the currently viewed day
-        renderWeightChart();
-		renderCalorieChart();
+        // Automatically refresh whichever chart is currently selected in the dropdown
+		window.switchChart(document.getElementById('chart-selector').value);
 		calculateStreak();
 		// Check for evening intercept
         if (viewedStr === todayStr) {
@@ -2754,7 +2753,8 @@ END:VCALENDAR`.replace(/\n/g, '\r\n');
         document.getElementById(`chart-container-${selectedType}`).classList.remove('hidden');
         document.getElementById(`chart-container-${selectedType}`).classList.add('block');
         
-        if (selectedType === 'weight') document.getElementById('weight-controls').classList.remove('hidden');
+        if (selectedType === 'bp') renderBPChart(); // Add this line!
+		if (selectedType === 'weight') document.getElementById('weight-controls').classList.remove('hidden');
         if (selectedType === 'calories') document.getElementById('calorie-controls').classList.remove('hidden');
 		if (selectedType === 'sodium') renderSodiumChart();
         if (selectedType === 'fats') renderFatsChart();
