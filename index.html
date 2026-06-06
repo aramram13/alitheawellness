@@ -271,8 +271,9 @@
                     <span id="history-chevron" class="text-gray-400 transform transition-transform duration-300 text-xs">▼</span>
                 </button>
                 <div class="flex gap-2">
-                    <button onclick="openBPModal()" class="bg-rose-100 hover:bg-rose-200 text-rose-700 text-[10px] font-bold py-1 px-2 rounded-md transition-colors shadow-sm">+ Vitals</button>
-                    <button onclick="openWorkoutModal()" class="bg-blue-100 hover:bg-blue-200 text-blue-700 text-[10px] font-bold py-1 px-2 rounded-md transition-colors shadow-sm">+ Workout</button>
+                    <button onclick="logUntracked()" class="bg-amber-100 hover:bg-amber-200 text-amber-700 text-[10px] font-bold py-1 px-2 rounded-md transition-colors shadow-sm">🍔 + Off-Grid</button>
+                    <button onclick="openBPModal()" class="bg-rose-100 hover:bg-rose-200 text-rose-700 text-[10px] font-bold py-1 px-2 rounded-md transition-colors shadow-sm">❤️ + Vitals</button>
+                    <button onclick="openWorkoutModal()" class="bg-blue-100 hover:bg-blue-200 text-blue-700 text-[10px] font-bold py-1 px-2 rounded-md transition-colors shadow-sm">💪 + Workout</button>
                 </div>
             </div>
             
@@ -1277,7 +1278,8 @@
         const dayData = dailyData[viewedStr] || { meals: [], exercise: 0 };
         const dailyGoal = parseInt(localStorage.getItem('alitheaplate_calorie_goal')) || 2000;
         
-        // 4. Calculate totals
+        // 4. Calculate totals & Check for Untracked Meals
+        const hasUntracked = dayData.meals.some(m => m.untracked);
         const totalFood = dayData.meals.reduce((sum, meal) => sum + (meal.calories || 0), 0);
         const totalExercise = parseInt(dayData.exercise) || 0;
         const remaining = dailyGoal - totalFood + totalExercise;
@@ -1285,13 +1287,23 @@
         // 5. Update UI Numbers
         document.getElementById('daily-goal-input').value = dailyGoal;
         document.getElementById('daily-exercise-input').value = totalExercise === 0 ? '' : totalExercise;
-        document.getElementById('calories-food').innerText = totalFood;
-        document.getElementById('calories-remaining').innerText = remaining;
-        document.getElementById('daily-weight-input').value = dayData.weight || '';
-		
-        // Color code remaining calories
+        
         const remainingEl = document.getElementById('calories-remaining');
-        remainingEl.className = `text-3xl font-black ${remaining >= 0 ? 'text-emerald-600' : 'text-red-500'}`;
+        const foodEl = document.getElementById('calories-food');
+        
+        if (hasUntracked) {
+            // Pause the math visually!
+            remainingEl.innerText = "PAUSED";
+            remainingEl.className = "text-xl font-black text-gray-400 tracking-wider mt-2";
+            foodEl.innerText = totalFood > 0 ? totalFood + "+" : "Untracked";
+            foodEl.classList.add("text-amber-500");
+        } else {
+            // Normal Math
+            remainingEl.innerText = remaining;
+            remainingEl.className = `text-3xl font-black ${remaining >= 0 ? 'text-emerald-600' : 'text-red-500'}`;
+            foodEl.innerText = totalFood;
+            foodEl.classList.remove("text-amber-500");
+        }
 
         // Automatically refresh whichever chart is currently selected in the dropdown
 		window.switchChart(document.getElementById('chart-selector').value);
@@ -3254,6 +3266,36 @@ END:VCALENDAR`.replace(/\n/g, '\r\n');
         // Find out which chart is currently open, and redraw it!
         const activeChart = document.getElementById('chart-selector').value;
         window.switchChart(activeChart); 
+    };
+	
+	// --- UNTRACKED / OFF-GRID MEAL LOGIC ---
+    window.logUntracked = function() {
+        if (!confirm("Are you taking a break? This will log an untracked meal and pause today's calorie counting. Your streak will be preserved!")) return;
+
+        const todayStr = new Date().toLocaleDateString();
+        let dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
+        
+        if (!dailyData[todayStr]) dailyData[todayStr] = { meals: [], exercise: 0 };
+        if (!dailyData[todayStr].meals) dailyData[todayStr].meals = [];
+        
+        dailyData[todayStr].meals.unshift({
+            time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+            type: "Untracked",
+            meal: "🍔 Off-Grid / Untracked Meal",
+            score: "N/A",
+            calories: 0,
+            untracked: true, // This is the secret flag the dashboard looks for!
+            positives: ["Taking a well-deserved mental health break!"],
+            negatives: ["No precise data recorded for this meal."],
+            recommendation: "Enjoy your time off! Perfect consistency isn't the goal; long-term sustainability is. Tomorrow is a new day."
+        });
+        
+        localStorage.setItem('alitheaplate_daily', JSON.stringify(dailyData));
+        
+        if (navigator.vibrate) navigator.vibrate(50);
+        
+        viewedDate = new Date(); 
+        updateDashboard();
     };
 </script>
 </body>
