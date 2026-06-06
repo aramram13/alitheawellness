@@ -242,29 +242,9 @@
                 </div>
 
                 <div id="weight-controls" class="hidden mb-2">
-                    <div class="flex justify-between items-center mb-2 px-2">
-                        <div class="flex bg-gray-100 rounded-lg p-0.5">
-                            <button id="chart-scope-week" class="px-2 py-1 text-[10px] font-bold rounded-md bg-white text-indigo-600 shadow-sm transition-all">1W</button>
-                            <button id="chart-scope-month" class="px-2 py-1 text-[10px] font-bold rounded-md text-gray-500 hover:text-indigo-600 transition-all">1M</button>
-                            <button id="chart-scope-year" class="px-2 py-1 text-[10px] font-bold rounded-md text-gray-500 hover:text-indigo-600 transition-all">1Y</button>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <button id="chart-prev-btn" class="text-gray-400 hover:text-indigo-600 font-bold px-2 py-0.5 rounded bg-gray-50 hover:bg-indigo-50 transition-colors">&lt;</button>
-                            <span id="chart-date-label" class="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center w-16">7 Days</span>
-                            <button id="chart-next-btn" class="text-gray-400 hover:text-indigo-600 font-bold px-2 py-0.5 rounded bg-gray-50 hover:bg-indigo-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent" disabled>&gt;</button>
-                        </div>
-                    </div>
-                    <div class="flex justify-between items-center mb-3 px-2">
+                    <div class="flex justify-between items-center mb-3 px-2 mt-2">
                         <p class="text-xs font-medium text-gray-500">Log Weight (lbs):</p>
                         <input type="number" id="daily-weight-input" placeholder="e.g., 165" class="w-20 bg-white border border-gray-300 rounded px-2 py-1 text-center font-bold text-indigo-600 focus:outline-none focus:border-indigo-500 shadow-sm">
-                    </div>
-                </div>
-
-                <div id="calorie-controls" class="flex justify-end px-2 mb-3">
-                    <div class="bg-gray-100 rounded-lg p-1 flex text-xs font-bold" id="cal-time-filters">
-                        <button onclick="setCalorieRange(7)" id="cal-btn-7" class="px-3 py-1 rounded bg-white shadow-sm text-emerald-600 transition-colors">1W</button>
-                        <button onclick="setCalorieRange(30)" id="cal-btn-30" class="px-3 py-1 rounded text-gray-400 hover:text-gray-600 transition-colors">1M</button>
-                        <button onclick="setCalorieRange(365)" id="cal-btn-365" class="px-3 py-1 rounded text-gray-400 hover:text-gray-600 transition-colors">1Y</button>
                     </div>
                 </div>
 
@@ -992,55 +972,32 @@
     let chartEndOffset = 0; // How many days in the past the chart ends. 0 = ends today.
 
     function renderWeightChart() {
-        const ctx = document.getElementById('weightChart').getContext('2d');
-        let dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
+        const ctx = document.getElementById('weightChart');
+        if (!ctx) return;
         
+        let dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
         const labels = [];
         const dataPoints = [];
-        
-        // 1. Determine how many days to pull based on the selected mode
-        let daysToLookBack = 6; 
-        if (chartMode === 'month') daysToLookBack = 29;
-        if (chartMode === 'year') daysToLookBack = 364;
+        const today = new Date();
 
-        // 2. Calculate the "End Date" for the right side of the graph
-        let endDate = new Date();
-        endDate.setDate(endDate.getDate() - chartEndOffset);
-
-        // 3. Update the UI Text Label
-        let startDate = new Date(endDate);
-        startDate.setDate(startDate.getDate() - daysToLookBack);
-        
-        const labelEl = document.getElementById('chart-date-label');
-        if (chartEndOffset === 0) {
-            labelEl.innerText = chartMode === 'year' ? "Past Year" : `Last ${daysToLookBack + 1} Days`;
-        } else {
-            labelEl.innerText = `${startDate.toLocaleDateString([], {month:'short', day:'numeric'})} - ${endDate.toLocaleDateString([], {month:'short', day:'numeric'})}`;
-        }
-
-        // 4. Generate the dates and fetch data from local storage
-        for (let i = daysToLookBack; i >= 0; i--) {
-            let d = new Date(endDate);
-            d.setDate(d.getDate() - i);
+        // Generate the dates based on the universal globalChartRange
+        for (let i = globalChartRange - 1; i >= 0; i--) {
+            let d = new Date(today);
+            d.setDate(today.getDate() - i);
             const dateStr = d.toLocaleDateString();
             
-            // Format labels cleverly so they don't crowd the screen
-            if (chartMode === 'week') {
-                labels.push(d.toLocaleDateString([], { weekday: 'short' })); 
-            } else if (chartMode === 'month') {
-                // Show label every ~5 days
-                labels.push(i % 5 === 0 || i === 0 || i === daysToLookBack ? d.toLocaleDateString([], { month: 'short', day: 'numeric' }) : '');
-            } else if (chartMode === 'year') {
-                // Only show label on the 1st of the month
-                labels.push(d.getDate() === 1 ? d.toLocaleDateString([], { month: 'short' }) : '');
-            }
+            // Smart Label Formatting
+            let labelStr = '';
+            if (globalChartRange === 7) labelStr = d.toLocaleDateString([], { weekday: 'short' });
+            else if (globalChartRange === 30) labelStr = (i % 5 === 0) ? d.toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
+            else if (globalChartRange === 365) labelStr = (d.getDate() === 1) ? d.toLocaleDateString([], { month: 'short' }) : '';
+            else labelStr = (d.getMonth() === 0 && d.getDate() === 1) ? d.getFullYear().toString() : '';
             
+            labels.push(labelStr);
             dataPoints.push(dailyData[dateStr] && dailyData[dateStr].weight ? parseFloat(dailyData[dateStr].weight) : null);
         }
 
-        if (weightChartInstance) {
-            weightChartInstance.destroy();
-        }
+        if (weightChartInstance) weightChartInstance.destroy();
 
         weightChartInstance = new Chart(ctx, {
             type: 'line',
@@ -1051,10 +1008,10 @@
                     data: dataPoints,
                     borderColor: '#4f46e5', 
                     backgroundColor: '#c7d2fe',
-                    borderWidth: chartMode === 'year' ? 1.5 : 2, // Thinner line for a year
+                    borderWidth: 2,
                     tension: 0.3,
                     pointBackgroundColor: '#4f46e5',
-                    pointRadius: chartMode === 'year' ? 0 : 3, // Hide dots on yearly view to keep it clean
+                    pointRadius: globalChartRange > 30 ? 0 : 3,
                     spanGaps: true 
                 }]
             },
@@ -1063,10 +1020,7 @@
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { 
-                        grid: { display: false },
-                        ticks: { maxRotation: 0, autoSkip: false } // Prevent Chart.js from overriding our smart labels
-                    },
+                    x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: false } },
                     y: { 
                         suggestedMin: Math.min(...dataPoints.filter(n => n !== null)) - 2,
                         suggestedMax: Math.max(...dataPoints.filter(n => n !== null)) + 2,
@@ -1075,9 +1029,6 @@
                 }
             }
         });
-
-        // 5. Turn the 'Next' arrow on or off depending on if we are in the present
-        document.getElementById('chart-next-btn').disabled = (chartEndOffset <= 0);
     }
 
     // --- BLOOD PRESSURE CHART (1D & MULTI-DAY) ---
@@ -1303,41 +1254,6 @@
             }
         });
     };
-	
-	// --- CHART NAVIGATION LISTENERS ---
-    document.getElementById('chart-prev-btn').addEventListener('click', () => {
-        let shiftDays = chartMode === 'week' ? 7 : (chartMode === 'month' ? 30 : 365);
-        chartEndOffset += shiftDays;
-        renderWeightChart();
-    });
-
-    document.getElementById('chart-next-btn').addEventListener('click', () => {
-        let shiftDays = chartMode === 'week' ? 7 : (chartMode === 'month' ? 30 : 365);
-        chartEndOffset -= shiftDays;
-        if (chartEndOffset < 0) chartEndOffset = 0; // Prevent looking into the future
-        renderWeightChart();
-    });
-
-    const scopeBtns = ['week', 'month', 'year'];
-    scopeBtns.forEach(mode => {
-        document.getElementById(`chart-scope-${mode}`).addEventListener('click', () => {
-            chartMode = mode;
-            chartEndOffset = 0; // Snap back to present when switching views
-            
-            // Update the colors of the buttons to show which is active
-            scopeBtns.forEach(m => {
-                const btn = document.getElementById(`chart-scope-${m}`);
-                if (m === mode) {
-                    btn.classList.add('bg-white', 'text-indigo-600', 'shadow-sm');
-                    btn.classList.remove('text-gray-500', 'hover:text-indigo-600');
-                } else {
-                    btn.classList.remove('bg-white', 'text-indigo-600', 'shadow-sm');
-                    btn.classList.add('text-gray-500', 'hover:text-indigo-600');
-                }
-            });
-            renderWeightChart();
-        });
-    });
 	
 	function updateDashboard() {
         // 1. Format the date strings
@@ -2749,7 +2665,6 @@ END:VCALENDAR`.replace(/\n/g, '\r\n');
         });
         
         document.getElementById('weight-controls').classList.add('hidden');
-        document.getElementById('calorie-controls').classList.add('hidden');
 
         // Show the selected ones
         document.getElementById(`chart-container-${selectedType}`).classList.remove('hidden');
@@ -2758,7 +2673,6 @@ END:VCALENDAR`.replace(/\n/g, '\r\n');
         if (selectedType === 'calories') renderCalorieChart();
 		if (selectedType === 'bp') renderBPChart(); // Add this line!
 		if (selectedType === 'weight') document.getElementById('weight-controls').classList.remove('hidden');
-        if (selectedType === 'calories') document.getElementById('calorie-controls').classList.remove('hidden');
 		if (selectedType === 'sodium') renderSodiumChart();
         if (selectedType === 'fats') renderFatsChart();
 		if (selectedType === 'net-carbs') renderNetCarbsChart();
