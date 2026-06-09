@@ -161,11 +161,20 @@
             <!-- MEDICAL CONTEXT -->
             <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                 <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide border-b pb-2 mb-3">Health Context</h3>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Medications & Supplements</label>
-                <textarea id="welcome-meds" placeholder="e.g., Lisinopril, Whey Protein, Daily Multivitamin, etc. (Optional)" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:border-emerald-500 resize-none shadow-sm" rows="2"></textarea>
-                <p class="text-[10px] text-gray-400 mt-1 italic">This allows the AI to check for food/medication interactions.</p>
+                
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Medical Conditions & Diagnoses</label>
+                    <textarea id="welcome-conditions" placeholder="e.g., Hypertension, Type 2 Diabetes, Celiac Disease (Optional)" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:border-emerald-500 resize-none shadow-sm" rows="2"></textarea>
+                    <p class="text-[10px] text-gray-400 mt-1 italic">Helps the AI tailor dietary and fitness feedback safely.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Medications & Supplements</label>
+                    <textarea id="welcome-meds" placeholder="e.g., Lisinopril, Whey Protein, Daily Multivitamin, etc. (Optional)" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:border-emerald-500 resize-none shadow-sm" rows="2"></textarea>
+                    <p class="text-[10px] text-gray-400 mt-1 italic">Allows the AI to check for food/medication interactions.</p>
+                </div>
             </div>
-        </div>
+        </div> <!-- This safely closes the goals container -->
 
         <button onclick="saveGoalsAndEnter()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-lg mt-auto transition-colors flex justify-center items-center gap-2">
             Save & Enter Dashboard <span class="text-lg">→</span>
@@ -633,6 +642,10 @@
                      </label>
                  </div>
              </div>
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Medical Conditions & Diagnoses</label>
+                    <textarea id="profile-conditions" placeholder="List any medical conditions..." class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:border-emerald-500 resize-none" rows="2"></textarea>
+                </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Medications & Supplements</label>
                     <textarea id="profile-meds" placeholder="List medications or supplements..." class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:border-emerald-500 resize-none" rows="2"></textarea>
@@ -1480,12 +1493,14 @@
         const userSex = profile.sex || "male";
         const userFitnessGoal = Array.isArray(profile.fitnessGoal) ? profile.fitnessGoal.join(" and ") : (profile.fitnessGoal || "General Health");
         const userMeds = profile.medications || "None reported";
+		const userConditions = profile.conditions || "None reported";
 
         const fitnessPrompt = `You are an expert personal trainer and metabolic calculator. 
         The user's name is ${userName}. Use their name in your feedback to be encouraging and personal.
         The user's current profile is: Age ${userAge}, Weight ${userWeight} lbs, Biological Sex: ${userSex}.
            Fitness Goal: ${userFitnessGoal}.
            Medications/Supplements: ${userMeds}.
+		   They have the following medical conditions: ${userConditions}.
 
            The user provided the following details: 
            ${context}
@@ -1635,6 +1650,7 @@
 
         // GATHER THE CONTEXT
         const profile = JSON.parse(localStorage.getItem('alitheaplate_profile') || '{}');
+		const userConditions = profile.conditions || "None reported";
         const todayStr = new Date().toLocaleDateString();
         const dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}')[todayStr] || { meals: [], workouts: [] };
         
@@ -1648,6 +1664,7 @@
         The user (Age: ${profile.age || "Unknown"}, Sex: ${profile.sex || "Unknown"}) just recorded a blood pressure reading of ${sys}/${dia} and a Heart Rate of ${hr} BPM.
 
         User's direct context/medications for today: "${userCtx}"
+		Medical Conditions: ${userConditions}.
         Meals logged today: ${recentMeals}
         Workouts logged today: ${recentWorkouts}
 
@@ -1739,6 +1756,7 @@
 
         // 1. Gather Profile Data
         const profile = JSON.parse(localStorage.getItem('alitheaplate_profile') || '{}');
+		const userConditions = profile.conditions || "None reported";
         const userSex = profile.sex || "Unknown";
         const userAge = profile.age || "Unknown";
         const userWeight = profile.weight || "Unknown";
@@ -1765,6 +1783,7 @@
         const prompt = `You are an expert AI nutritionist and metabolic calculator. 
         User Profile: Age ${userAge}, Sex ${userSex}, Weight ${userWeight} lbs, Height ${userHeight}.
         Dietary Focus: ${userDiet}.
+		Medical Conditions: ${userConditions}.
         Fitness Goal: ${userFitnessGoal}.
         Past 7 Days Intake Trends: ${trendText}.
 
@@ -1839,7 +1858,8 @@
 		document.querySelectorAll('input[name="profile-fitness-goal"]').forEach(cb => {
          cb.checked = savedFitnessGoals.includes(cb.value);
 		});
-        document.getElementById('profile-meds').value = profile.medications || '';
+        document.getElementById('profile-conditions').value = profile.conditions || '';
+		document.getElementById('profile-meds').value = profile.medications || '';
         
         // Reset and check the boxes based on stored goals
         document.querySelectorAll('input[name="profile-goal"]').forEach(cb => {
@@ -1862,7 +1882,8 @@
             weight: document.getElementById('profile-weight').value,
             sex: document.getElementById('profile-sex').value,
             fitnessGoal: Array.from(document.querySelectorAll('input[name="profile-fitness-goal"]:checked')).map(cb => cb.value),
-            medications: document.getElementById('profile-meds').value.trim()
+            conditions: document.getElementById('profile-conditions').value.trim(),
+			medications: document.getElementById('profile-meds').value.trim()
         };
         
         // Save goals
@@ -1886,7 +1907,8 @@
             weight: document.getElementById('welcome-weight').value,
             sex: document.getElementById('welcome-sex').value,
             fitnessGoal: Array.from(document.querySelectorAll('input[name="welcome-fitness-goal"]:checked')).map(cb => cb.value),
-            medications: document.getElementById('welcome-meds').value.trim()
+            conditions: document.getElementById('welcome-conditions').value.trim(),
+			medications: document.getElementById('welcome-meds').value.trim()
         };
 
         const selectedGoals = Array.from(document.querySelectorAll('input[name="welcome-goal"]:checked'))
@@ -2279,6 +2301,7 @@
             const profile = JSON.parse(localStorage.getItem('alitheaplate_profile') || '{}');
             const userName = profile.name || "there";
             const userMeds = profile.medications || "None reported";
+			const userConditions = profile.conditions || "None reported";
             const userFitnessGoal = Array.isArray(profile.fitnessGoal) ? profile.fitnessGoal.join(" and ") : (profile.fitnessGoal || "General Health");
 
             const mealType = document.getElementById('meal-type-select').value;
@@ -2288,6 +2311,7 @@
             The user's dietary focus is: ${selectedGoal}. 
             Their overarching fitness goal is: ${userFitnessGoal}.
             They are currently taking the following medications/supplements: ${userMeds}.
+			They have the following medical conditions: ${userConditions}.
             
             ${contextInstruction}
             CRITICAL: The user has identified this item as a "${mealType}". Adjust your expectations and scoring accordingly (e.g., a snack, beverage, or dessert should not be penalized for lacking the macros or volume of a full dinner).
