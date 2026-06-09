@@ -746,9 +746,44 @@
                 </div>
             </div>
             
-            <button onclick="closeMealModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-3 rounded-xl mt-6 transition-colors">
-                Close
-            </button>
+            <!-- EDIT FORM (Hidden by default) -->
+            <div id="meal-edit-form" class="hidden mt-6 bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
+                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide border-b pb-2 mb-2">Edit Meal Details</h3>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Meal Type</label>
+                    <select id="edit-meal-type" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                        <option value="Breakfast">🍳 Breakfast</option>
+                        <option value="Lunch">🥪 Lunch</option>
+                        <option value="Dinner">🍽️ Dinner</option>
+                        <option value="Snack">🍎 Snack</option>
+                        <option value="Beverage">☕ Beverage</option>
+                        <option value="Dessert">🍰 Dessert</option>
+                        <option value="Untracked">🍔 Untracked</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Name</label>
+                    <input type="text" id="edit-meal-name" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                </div>
+                <div class="flex gap-3">
+                    <div class="flex-1">
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Calories</label>
+                        <input type="number" id="edit-meal-cals" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+                <button onclick="saveMealEdit()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg mt-2 transition-colors shadow-sm">
+                    Save Changes
+                </button>
+            </div>
+
+            <div class="flex gap-2 mt-6">
+                <button onclick="toggleMealEdit()" class="flex-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold py-3 rounded-xl transition-colors border border-indigo-100">
+                    ✏️ Edit
+                </button>
+                <button onclick="closeMealModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-3 rounded-xl transition-colors">
+                    Close
+                </button>
+            </div>
         </div>
 		</div><div id="workout-detail-modal" class="hidden fixed inset-0 bg-gray-900/60 z-50 flex items-center justify-center p-4">
         <div class="bg-white w-full sm:w-11/12 sm:rounded-2xl rounded-t-2xl p-6 max-h-[85vh] overflow-y-auto shadow-2xl relative">
@@ -779,9 +814,32 @@
                 </div>
             </div>
             
-            <button onclick="closeWorkoutDetailModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-3 rounded-xl mt-6 transition-colors">
-                Close
-            </button>
+            <!-- EDIT FORM (Hidden by default) -->
+            <div id="workout-edit-form" class="hidden mt-6 bg-blue-50 p-4 rounded-xl border border-blue-100 space-y-3">
+                <h3 class="text-xs font-bold text-blue-700 uppercase tracking-wide border-b border-blue-200 pb-2 mb-2">Edit Activity Details</h3>
+                <div>
+                    <label class="block text-[10px] font-bold text-blue-700 uppercase mb-1">Summary / Name</label>
+                    <input type="text" id="edit-workout-summary" class="w-full bg-white border border-blue-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="flex gap-3">
+                    <div class="flex-1">
+                        <label class="block text-[10px] font-bold text-blue-700 uppercase mb-1">Calories Burned</label>
+                        <input type="number" id="edit-workout-cals" class="w-full bg-white border border-blue-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+                <button onclick="saveWorkoutEdit()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg mt-2 transition-colors shadow-sm">
+                    Save Changes
+                </button>
+            </div>
+
+            <div class="flex gap-2 mt-6">
+                <button onclick="toggleWorkoutEdit()" class="flex-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold py-3 rounded-xl transition-colors border border-indigo-100">
+                    ✏️ Edit
+                </button>
+                <button onclick="closeWorkoutDetailModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-3 rounded-xl transition-colors">
+                    Close
+                </button>
+            </div>
         </div>
     </div>
 	
@@ -1390,14 +1448,17 @@
         historyContainer.innerHTML = historyHTML;
     }
 
-    // --- MODAL LOGIC ---
+    // --- MEAL MODAL LOGIC ---
+    window.currentMealEditIndex = null;
+
     window.openMealModal = function(index) {
+        window.currentMealEditIndex = index;
         const viewedStr = viewedDate.toLocaleDateString();
         let dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
         const mealData = dailyData[viewedStr].meals[index];
 
         document.getElementById('modal-meal-name').innerText = mealData.meal;
-        document.getElementById('modal-meal-time').innerText = mealData.time;
+        document.getElementById('modal-meal-time').innerText = mealData.time + (mealData.type ? ` • ${mealData.type}` : '');
         document.getElementById('modal-meal-score').innerText = mealData.score;
         
         // Fallback for older meals scanned before this update
@@ -1409,11 +1470,43 @@
         document.getElementById('modal-cons').innerHTML = cons.map(c => `<li>• ${c}</li>`).join('');
         document.getElementById('modal-recommendation').innerText = rec;
 
+        document.getElementById('meal-edit-form').classList.add('hidden');
         document.getElementById('meal-modal').classList.remove('hidden');
     };
 
     window.closeMealModal = function() {
         document.getElementById('meal-modal').classList.add('hidden');
+    };
+
+    window.toggleMealEdit = function() {
+        const viewedStr = viewedDate.toLocaleDateString();
+        let dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
+        const mealData = dailyData[viewedStr].meals[window.currentMealEditIndex];
+        
+        // Populate the inputs with the existing data
+        document.getElementById('edit-meal-type').value = mealData.type || "Snack";
+        document.getElementById('edit-meal-name').value = mealData.meal;
+        document.getElementById('edit-meal-cals').value = mealData.calories;
+        
+        document.getElementById('meal-edit-form').classList.toggle('hidden');
+    };
+
+    window.saveMealEdit = function() {
+        if (window.currentMealEditIndex === null) return;
+        
+        const viewedStr = viewedDate.toLocaleDateString();
+        let dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
+        let mealToEdit = dailyData[viewedStr].meals[window.currentMealEditIndex];
+        
+        // Overwrite the variables
+        mealToEdit.type = document.getElementById('edit-meal-type').value;
+        mealToEdit.meal = document.getElementById('edit-meal-name').value;
+        mealToEdit.calories = parseInt(document.getElementById('edit-meal-cals').value) || 0;
+        
+        localStorage.setItem('alitheaplate_daily', JSON.stringify(dailyData));
+        
+        updateDashboard();
+        closeMealModal();
     };
 	
 	// --- WORKOUT MODAL LOGIC ---
@@ -1505,7 +1598,10 @@
            The user provided the following details: 
            ${context}
 
-           Calculate the estimated calories burned using standard Metabolic Equivalent (MET) formulas. Use photos if provided to gauge effort and equipment.
+           Calculate the estimated calories burned using standard Metabolic Equivalent (MET) formulas. 
+           CRITICAL CALORIE RULE: For weightlifting, strength training, or sets/reps-based workouts, be highly conservative. Use a MET value of 3.0 to 3.5 maximum, and strictly account for rest periods between sets. Do not calculate continuous burn.
+           CRITICAL OVERRIDE: If the user explicitly states the number of calories they burned in their prompt or context (e.g., from a smartwatch or fitness tracker), you MUST use their exact number for "calories_burned" and skip your own MET calculations entirely.
+           Use photos if provided to gauge effort and equipment.
            CRITICAL: Tailor your "feedback" directly to their Fitness Goal.
 
            Return ONLY a raw JSON object. Do not use markdown formatting. Structure exactly like this:
@@ -1976,8 +2072,11 @@
         }
     };
 
-    // --- WORKOUT DETAIL & DELETE LOGIC ---
+    // --- WORKOUT DETAIL & EDIT LOGIC ---
+    window.currentWorkoutEditIndex = null;
+
     window.openWorkoutDetailModal = function(index) {
+        window.currentWorkoutEditIndex = index;
         const viewedStr = viewedDate.toLocaleDateString();
         let dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
         const workoutData = dailyData[viewedStr].workouts[index];
@@ -1988,11 +2087,45 @@
         document.getElementById('detail-workout-desc').innerText = workoutData.description;
         document.getElementById('detail-workout-feedback').innerText = workoutData.feedback;
 
+        document.getElementById('workout-edit-form').classList.add('hidden');
         document.getElementById('workout-detail-modal').classList.remove('hidden');
     };
 
     window.closeWorkoutDetailModal = function() {
         document.getElementById('workout-detail-modal').classList.add('hidden');
+    };
+
+    window.toggleWorkoutEdit = function() {
+        const viewedStr = viewedDate.toLocaleDateString();
+        let dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
+        const workoutData = dailyData[viewedStr].workouts[window.currentWorkoutEditIndex];
+        
+        document.getElementById('edit-workout-summary').value = workoutData.summary || "Workout";
+        document.getElementById('edit-workout-cals').value = workoutData.calories;
+        
+        document.getElementById('workout-edit-form').classList.toggle('hidden');
+    };
+
+    window.saveWorkoutEdit = function() {
+        if (window.currentWorkoutEditIndex === null) return;
+        
+        const viewedStr = viewedDate.toLocaleDateString();
+        let dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
+        
+        // We have to math out the difference so your daily total updates correctly!
+        const oldCals = dailyData[viewedStr].workouts[window.currentWorkoutEditIndex].calories;
+        const newCals = parseInt(document.getElementById('edit-workout-cals').value) || 0;
+        const difference = newCals - oldCals;
+        
+        dailyData[viewedStr].exercise = Math.max(0, (parseInt(dailyData[viewedStr].exercise) || 0) + difference);
+        
+        dailyData[viewedStr].workouts[window.currentWorkoutEditIndex].summary = document.getElementById('edit-workout-summary').value;
+        dailyData[viewedStr].workouts[window.currentWorkoutEditIndex].calories = newCals;
+        
+        localStorage.setItem('alitheaplate_daily', JSON.stringify(dailyData));
+        
+        updateDashboard();
+        closeWorkoutDetailModal();
     };
 
     // --- DELETE VITAL LOGIC ---
