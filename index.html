@@ -705,6 +705,9 @@
 			<button onclick="saveProfile()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl mt-8 shadow-md transition-colors">
                 Save Profile
             </button>
+			<div class="text-center mt-4">
+                <button onclick="openPrivacyModal()" class="text-xs text-gray-400 hover:text-emerald-600 underline transition-colors">Privacy & Data Control Policy</button>
+            </div>
         </div>
     </div>
 	
@@ -952,6 +955,51 @@
                 </button>
             </div>
 
+        </div>
+    </div>
+
+<div id="privacy-modal" class="hidden fixed inset-0 bg-gray-900/80 z-[60] flex items-center justify-center p-4">
+        <div class="bg-white w-full sm:w-11/12 sm:rounded-2xl rounded-t-2xl p-6 max-h-[85vh] overflow-y-auto shadow-2xl relative">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-black text-gray-800">Privacy & Data Policy</h2>
+                <button onclick="closePrivacyModal()" class="text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
+            </div>
+            
+            <div class="space-y-4 text-sm text-gray-600 leading-relaxed">
+                <p><strong>Effective Date:</strong> June 2026</p>
+                <p>At Alithea Wellness, we believe that the truth of your health belongs exclusively to you. This Privacy Statement outlines our strict commitment to data minimization, local storage, and your absolute sovereignty over your personal information.</p>
+                
+                <h3 class="font-bold text-gray-800 text-xs uppercase tracking-wide border-b pb-1 mt-4">1. How Your Data is Stored (100% Local)</h3>
+                <p>Alithea Wellness operates as a strictly local application. <strong>We do not maintain, own, or lease any central databases, and we do not store your user profiles, health metrics, or daily logs on any external servers.</strong></p>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li>All information you provide is saved exclusively within your device's local browser storage.</li>
+                    <li>Because your data never lives on our servers, we cannot sell, share, or monetize your personal health information.</li>
+                </ul>
+
+                <h3 class="font-bold text-gray-800 text-xs uppercase tracking-wide border-b pb-1 mt-4">2. How Your Data is Processed (AI)</h3>
+                <p>To provide advanced features, the application must process your inputs using external Artificial Intelligence models.</p>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li>When you request an AI calculation, the specific data required is securely transmitted to our processing endpoint.</li>
+                    <li>This transmission is strictly ephemeral. It is used solely in real-time to generate feedback, after which it is returned to your device. We do not retain or log these transmissions.</li>
+                </ul>
+
+                <h3 class="font-bold text-gray-800 text-xs uppercase tracking-wide border-b pb-1 mt-4">3. Data Security & Protection</h3>
+                <p>Because your data resides on your personal hardware, the security of your Alithea Wellness data relies on the security of your device. We recommend utilizing standard device-level security measures to protect access to your browser.</p>
+
+                <h3 class="font-bold text-gray-800 text-xs uppercase tracking-wide border-b pb-1 mt-4">4. Your Absolute Control</h3>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li><strong>Granular Deletion:</strong> You may permanently delete any individual meal, workout, or vitals reading directly from your Dashboard.</li>
+                    <li><strong>Complete Erasure:</strong> You can permanently erase your entire profile and history by clearing your browser’s cache for this application.</li>
+                    <li><strong>Data Portability:</strong> You may use the "Export Data" tool to download a complete JSON backup of your history.</li>
+                </ul>
+
+                <h3 class="font-bold text-gray-800 text-xs uppercase tracking-wide border-b pb-1 mt-4">5. Medical Disclaimer</h3>
+                <p>Alithea Wellness is an informational tracking tool. It is not a medical device. The AI-generated feedback does not constitute professional medical advice, diagnosis, or treatment. Always consult with a qualified healthcare provider.</p>
+            </div>
+
+            <button onclick="closePrivacyModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-3 rounded-xl mt-6 transition-colors">
+                Close & Accept
+            </button>
         </div>
     </div>
 
@@ -1969,6 +2017,16 @@
         document.getElementById('profile-modal').classList.add('hidden');
     };
 	
+	window.openPrivacyModal = function() {
+        document.getElementById('privacy-modal').classList.remove('hidden');
+    };
+
+    window.closePrivacyModal = function() {
+        // Save the flag to local storage so it doesn't pop up again!
+        localStorage.setItem('alitheaplate_privacy_accepted', 'true');
+        document.getElementById('privacy-modal').classList.add('hidden');
+    };
+	
 	window.saveProfile = function() {
         const profile = {
             name: document.getElementById('profile-name').value.trim(),
@@ -2285,12 +2343,19 @@
             // Returning user: Set dashboard greeting and go to dashboard
             const dashMsg = document.getElementById('dashboard-message');
             if (dashMsg) dashMsg.innerText = "Welcome back. Let’s find the truth in today’s progress.";
-            navigateTo('screen-dashboard', true); // <--- Added 'true' here
+            navigateTo('screen-dashboard', true); 
         } else {
             // First time user: Set welcome greeting and go to welcome screen
             const welcomeMsg = document.getElementById('welcome-message');
             if (welcomeMsg) welcomeMsg.innerText = "Welcome to Alithea Wellness! Named for the Greek word for 'Truth,' we’re here to help you uncover the reality behind your fitness and nutrition goals, through data you can trust!";
-            navigateTo('screen-welcome', true); // <--- Added 'true' here
+            navigateTo('screen-welcome', true); 
+        }
+
+        // NEW: Automatically pop up the Privacy Policy if they haven't accepted it yet
+        if (!localStorage.getItem('alitheaplate_privacy_accepted')) {
+            setTimeout(() => {
+                openPrivacyModal();
+            }, 300); // 300ms delay makes the popup animation feel smooth!
         }
     }; 
 
