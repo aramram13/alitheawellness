@@ -101,7 +101,7 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Biological Sex</label>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Biological Sex (For BMR Math)</label>
                     <select id="welcome-sex" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-emerald-500 appearance-none">
                         <option value="male">Male</option>
                         <option value="female">Female</option>
@@ -702,6 +702,13 @@
                 </div>
             </div>
 			
+			<!-- CLEAR DATA BUTTON -->
+            <div class="mt-4 mb-6">
+                <button onclick="clearAllUserData()" class="w-full bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 rounded-xl transition-colors border border-rose-200">
+                    🗑️ Delete All My Data
+                </button>
+            </div>
+			
 			<button onclick="saveProfile()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl mt-8 shadow-md transition-colors">
                 Save Profile
             </button>
@@ -989,7 +996,7 @@
                 <h3 class="font-bold text-gray-800 text-xs uppercase tracking-wide border-b pb-1 mt-4">4. Your Absolute Control</h3>
                 <ul class="list-disc pl-5 space-y-1">
                     <li><strong>Granular Deletion:</strong> You may permanently delete any individual meal, workout, or vitals reading directly from your Dashboard.</li>
-                    <li><strong>Complete Erasure:</strong> You can permanently erase your entire profile and history by clearing your browser’s cache for this application.</li>
+                    <li><strong>Complete Erasure:</strong> You can permanently erase your entire profile and history by selecting the Delete All My Data button under your profile settings, or by clearing your browser’s cache for this application.</li>
                     <li><strong>Data Portability:</strong> You may use the "Export Data" tool to download a complete JSON backup of your history.</li>
                 </ul>
 
@@ -2110,6 +2117,21 @@
             }
         };
         reader.readAsText(file);
+    };
+	
+	window.clearAllUserData = function() {
+        const confirmWipe = confirm("🚨 WARNING: This will permanently delete your profile, all logged meals, workouts, and vitals. This action CANNOT be undone.\n\nAre you absolutely sure you want to erase all your data?");
+        
+        if (confirmWipe) {
+            // Remove all Alithea-specific keys from local storage
+            localStorage.removeItem('alitheaplate_profile');
+            localStorage.removeItem('alitheaplate_goals');
+            localStorage.removeItem('alitheaplate_daily');
+            localStorage.removeItem('alitheaplate_privacy_accepted');
+            
+            // Reload the page. Since the data is gone, it will automatically route back to the Welcome Screen!
+            window.location.reload();
+        }
     };
 	
 	// --- DELETE MEAL LOGIC ---
