@@ -222,6 +222,7 @@
                         <option value="calories">Calories In vs Out</option>
                         <option value="weight">Morning Weight</option>
                         <option value="bp">Blood Pressure</option>
+						<option value="glucose">Blood Glucose & GMI</option>
 						<option value="hr">Heart Rate / Pulse (BPM)</option>
 						<option value="sodium">Sodium Intake</option>
                         <option value="fats">Fat Breakdown (Sat vs Unsat)</option>
@@ -264,6 +265,7 @@
                     <div id="chart-container-calories" class="relative h-48 w-full block"><canvas id="calorieChart"></canvas></div>
                     <div id="chart-container-weight" class="relative h-48 w-full hidden"><canvas id="weightChart"></canvas></div>
                     <div id="chart-container-bp" class="relative h-48 w-full hidden"><canvas id="bpChart"></canvas></div>
+					<div id="chart-container-glucose" class="relative h-48 w-full hidden"><canvas id="glucoseChart"></canvas></div>
 					<div id="chart-container-hr" class="relative h-48 w-full hidden"><canvas id="hrChart"></canvas></div>
 					<div id="chart-container-sodium" class="relative h-48 w-full hidden"><canvas id="sodiumChart"></canvas></div>
                     <div id="chart-container-fats" class="relative h-48 w-full hidden"><canvas id="fatsChart"></canvas></div>
@@ -285,7 +287,8 @@
                 <div class="flex gap-2">
                     <button onclick="logUntracked()" class="bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 text-amber-500 text-[10px] font-bold py-1 px-2 rounded-md transition-colors shadow-sm">🍔 + Off-Grid</button>
                     <button onclick="openBPModal()" class="bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-400 text-[10px] font-bold py-1 px-2 rounded-md transition-colors shadow-sm">❤️ + Vitals</button>
-                    <button onclick="openWorkoutModal()" class="bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 text-blue-400 text-[10px] font-bold py-1 px-2 rounded-md transition-colors shadow-sm">💪 + Workout</button>
+                    <button onclick="openGlucoseModal()" class="bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 text-indigo-400 text-[10px] font-bold py-1 px-2 rounded-md transition-colors shadow-sm">🩸 + Glucose</button>
+					<button onclick="openWorkoutModal()" class="bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 text-blue-400 text-[10px] font-bold py-1 px-2 rounded-md transition-colors shadow-sm">💪 + Workout</button>
                 </div>
             </div>
             
@@ -601,9 +604,9 @@
                         <input type="checkbox" id="clin-vit-hr" checked class="w-4 h-4 accent-amber-500">
                         <span class="ml-3 text-sm font-medium text-zinc-300">Resting Heart Rate (BPM)</span>
                     </label>
-                    <label class="flex items-center p-3 border border-zinc-800/50 rounded-xl bg-zinc-950/50 opacity-60 cursor-not-allowed">
-                        <input type="checkbox" disabled class="w-4 h-4 accent-zinc-700">
-                        <span class="ml-3 text-sm font-medium text-zinc-500">Blood Glucose <i class="text-[10px]">(Coming Soon)</i></span>
+                    <label class="flex items-center p-3 border border-zinc-800 rounded-xl cursor-pointer hover:border-amber-500 transition-all bg-zinc-950">
+                        <input type="checkbox" id="clin-vit-bg" checked class="w-4 h-4 accent-amber-500">
+                        <span class="ml-3 text-sm font-medium text-zinc-300">Blood Glucose & GMI</span>
                     </label>
                 </div>
 
@@ -1086,6 +1089,79 @@
         </div>
     </div>
 	
+	<div id="glucose-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-zinc-900 border border-zinc-800 w-full sm:w-11/12 rounded-2xl p-6 max-h-[85vh] overflow-y-auto shadow-2xl relative">
+            
+            <div id="glucose-loading" class="hidden absolute inset-0 bg-zinc-900/95 z-10 flex flex-col items-center justify-center rounded-2xl">
+                <div class="loader mb-4 !border-t-indigo-500"></div>
+                <p class="text-zinc-100 font-bold animate-pulse text-center">Analyzing glucose trends...<br><span class="text-xs font-normal text-zinc-500">Consulting AI Coach</span></p>
+            </div>
+
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-black text-zinc-100 flex items-center gap-2">🩸 Blood Glucose</h2>
+                <button onclick="closeGlucoseModal()" class="text-zinc-500 hover:text-amber-500 font-bold text-xl transition-colors">✕</button>
+            </div>
+
+            <div id="glucose-input-section" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-zinc-500 uppercase mb-2">Current Reading / Daily Average (mg/dL)</label>
+                    <input type="number" id="bg-reading" placeholder="e.g., 105" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 text-2xl text-center font-black text-indigo-400 focus:outline-none focus:border-indigo-500 shadow-sm transition-colors">
+                </div>
+
+                <div class="bg-zinc-950 p-4 rounded-xl border border-zinc-800">
+                    <label class="block text-xs font-bold text-zinc-500 uppercase mb-3">CGM Metrics (Optional)</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="text-center">
+                            <label class="block text-[10px] font-bold text-emerald-500 mb-1">TIR (%)</label>
+                            <input type="number" id="bg-tir" placeholder=">70" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-2 text-center text-sm font-bold text-zinc-200 focus:outline-none focus:border-emerald-500 transition-colors">
+                        </div>
+                        <div class="text-center">
+                            <label class="block text-[10px] font-bold text-amber-500 mb-1">TAR (%)</label>
+                            <input type="number" id="bg-tar" placeholder="<25" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-2 text-center text-sm font-bold text-zinc-200 focus:outline-none focus:border-amber-500 transition-colors">
+                        </div>
+                        <div class="text-center">
+                            <label class="block text-[10px] font-bold text-rose-500 mb-1">TBR (%)</label>
+                            <input type="number" id="bg-tbr" placeholder="<4" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-2 text-center text-sm font-bold text-zinc-200 focus:outline-none focus:border-rose-500 transition-colors">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-zinc-500 uppercase mb-2">Context (Fasting, Post-Meal, Notes)</label>
+                    <textarea id="bg-context" placeholder="e.g., 'Fasting reading' or '2 hours after eating pasta'" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-indigo-500 resize-none shadow-sm transition-colors" rows="2"></textarea>
+                </div>
+
+                <button onclick="calculateGlucose()" class="w-full bg-gradient-to-r from-indigo-500 to-indigo-700 hover:from-indigo-600 hover:to-indigo-800 text-zinc-100 font-black py-3.5 rounded-xl mt-4 shadow-lg transition-all">
+                    Analyze Glucose
+                </button>
+            </div>
+
+            <div id="glucose-result-section" class="hidden space-y-4">
+                <div class="bg-indigo-500/10 rounded-2xl p-5 mb-2 flex justify-between items-center shadow-inner border border-indigo-500/20">
+                    <div class="pr-4">
+                        <h2 id="bg-result-status" class="text-2xl font-black text-indigo-400 mb-1 leading-tight">Status</h2>
+                    </div>
+                    <div class="text-right">
+                        <span id="bg-result-numbers" class="text-3xl font-black text-zinc-100">100</span>
+                        <span class="text-xs font-bold text-zinc-500 uppercase block">mg/dL</span>
+                    </div>
+                </div>
+
+                <div class="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700">
+                    <h3 class="flex items-center font-bold text-indigo-400 mb-2 uppercase tracking-wide text-xs">🧠 Clinical AI Context</h3>
+                    <p id="bg-result-feedback" class="text-zinc-300 text-sm font-medium leading-relaxed"></p>
+                    <p class="text-[10px] text-zinc-500 italic mt-3 pt-2 border-t border-zinc-700 leading-tight">
+                        🤖 <strong>AI-Generated:</strong> This feedback is for informational purposes only.
+                    </p>
+                </div>
+
+                <button onclick="logFinalGlucose()" class="w-full bg-gradient-to-r from-indigo-500 to-indigo-700 hover:from-indigo-600 hover:to-indigo-800 text-zinc-100 font-black py-3.5 rounded-xl mt-4 shadow-lg transition-all">
+                    Save to Dashboard
+                </button>
+            </div>
+        </div>
+    </div>
+	
 	<!-- BLOOD PRESSURE MODAL -->
     <div id="bp-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-zinc-900 border border-zinc-800 w-full sm:w-11/12 rounded-2xl p-6 max-h-[85vh] overflow-y-auto shadow-2xl relative">
@@ -1188,6 +1264,7 @@
                     <li><strong class="text-zinc-200">Granular Deletion:</strong> You may permanently delete any individual meal, workout, or vitals reading directly from your Dashboard.</li>
                     <li><strong class="text-zinc-200">Complete Erasure:</strong> You can permanently erase your entire profile and history by selecting the Delete All My Data button under your profile settings, or by clearing your browser’s cache for this application.</li>
                     <li><strong class="text-zinc-200">Data Portability:</strong> You may use the "Export Data" tool to download a complete JSON backup of your history.</li>
+					<li><strong class="text-zinc-200">Clinical Reports & Sharing:</strong> You have the option to generate clinical PDFs to share with your healthcare provider. Because these documents are generated locally, you are solely responsible for the security and transmission of the document once it is saved to or shared from your device.</li>
                 </ul>
 
                 <h3 class="font-bold text-amber-500 text-xs uppercase tracking-wide border-b border-zinc-800 pb-1 mt-4">5. Medical Disclaimer</h3>
@@ -2365,6 +2442,7 @@
             // Read all specific checkboxes
             const doBp = document.getElementById('clin-vit-bp').checked;
             const doHr = document.getElementById('clin-vit-hr').checked;
+			const doBg = document.getElementById('clin-vit-bg').checked;
             const doCal = document.getElementById('clin-nut-cal').checked;
             const doPro = document.getElementById('clin-nut-pro').checked;
             const doCarb = document.getElementById('clin-nut-carb').checked;
@@ -2403,6 +2481,7 @@
             // 3. Process Math Data for Timeframe
             let sysSum = 0, diaSum = 0, bpCount = 0;
             let hrSum = 0, hrCount = 0;
+			let bgSum = 0, bgCount = 0, tirSum = 0, tirCount = 0;
             let mCals=0, mPro=0, mCarb=0, mNet=0, mFib=0, mSug=0, mFat=0, mSat=0, mSod=0, mChol=0, nutCount=0;
             let burnSum = 0, workoutCount = 0;
 
@@ -2427,6 +2506,10 @@
                         if (doHr && v.hr && v.hr !== "Not provided") {
                             hrSum += parseInt(v.hr); hrCount++;
                         }
+						if (doBg && v.type === "Blood Glucose" && v.raw_bg) {
+                        bgSum += parseInt(v.raw_bg); bgCount++;
+                        if (v.tir) { tirSum += parseInt(v.tir); tirCount++; }
+						}
                     });
                 }
 
@@ -2458,11 +2541,21 @@
 
             // 4. Inject Vitals Math into PDF UI
             const vitalsSection = document.getElementById('pdf-vitals-section');
-            if (doBp || doHr) {
+            if (doBp || doHr || doBg) {
                 let vHTML = '';
                 if (doBp) vHTML += bpCount > 0 ? `<li><strong>Average Blood Pressure:</strong> ${Math.round(sysSum/bpCount)} / ${Math.round(diaSum/bpCount)} mmHg <span class="text-gray-500 text-xs">(${bpCount} readings)</span></li>` : `<li>No Blood Pressure data.</li>`;
                 if (doHr) vHTML += hrCount > 0 ? `<li><strong>Average Heart Rate:</strong> ${Math.round(hrSum/hrCount)} BPM</li>` : `<li>No Heart Rate data.</li>`;
-                document.getElementById('pdf-vitals-list').innerHTML = vHTML;
+                if (doBg) {
+                if (bgCount > 0) {
+                    const avgBG = Math.round(bgSum / bgCount);
+                    const gmi = (3.31 + (0.02392 * avgBG)).toFixed(1);
+                    vHTML += `<li><strong>Average Blood Glucose:</strong> ${avgBG} mg/dL (Est. GMI: ${gmi}%)</li>`;
+                    if (tirCount > 0) vHTML += `<li><strong>Average Time in Range (TIR):</strong> ${Math.round(tirSum / tirCount)}%</li>`;
+                } else {
+                    vHTML += `<li>No Blood Glucose data.</li>`;
+                }
+            }
+				document.getElementById('pdf-vitals-list').innerHTML = vHTML;
                 vitalsSection.style.display = 'block';
             } else vitalsSection.style.display = 'none';
 
@@ -3457,6 +3550,7 @@ END:VCALENDAR`.replace(/\n/g, '\r\n');
         
         if (selectedType === 'calories') renderCalorieChart();
 		if (selectedType === 'bp') renderBPChart(); // Add this line!
+		if (selectedType === 'glucose') renderGlucoseChart();
 		if (selectedType === 'weight') document.getElementById('weight-controls').classList.remove('hidden');
 		if (selectedType === 'sodium') renderSodiumChart();
         if (selectedType === 'fats') renderFatsChart();
@@ -4069,6 +4163,220 @@ END:VCALENDAR`.replace(/\n/g, '\r\n');
         
         viewedDate = new Date(); 
         updateDashboard();
+    };
+	
+	// --- BLOOD GLUCOSE & GMI LOGIC ---
+    let pendingGlucose = null;
+
+    window.openGlucoseModal = function() {
+        document.getElementById('bg-reading').value = '';
+        document.getElementById('bg-tir').value = '';
+        document.getElementById('bg-tar').value = '';
+        document.getElementById('bg-tbr').value = '';
+        document.getElementById('bg-context').value = '';
+        
+        document.getElementById('glucose-input-section').classList.remove('hidden');
+        document.getElementById('glucose-result-section').classList.add('hidden');
+        document.getElementById('glucose-loading').classList.add('hidden');
+        
+        pendingGlucose = null;
+        document.getElementById('glucose-modal').classList.remove('hidden');
+    };
+
+    window.closeGlucoseModal = function() {
+        document.getElementById('glucose-modal').classList.add('hidden');
+    };
+
+    window.calculateGlucose = async function() {
+        const reading = document.getElementById('bg-reading').value;
+        const tir = document.getElementById('bg-tir').value;
+        const tar = document.getElementById('bg-tar').value;
+        const tbr = document.getElementById('bg-tbr').value;
+        const userCtx = document.getElementById('bg-context').value.trim();
+
+        if (!reading) {
+            alert("Please enter a Blood Glucose reading.");
+            return;
+        }
+
+        document.getElementById('glucose-loading').classList.remove('hidden');
+
+        const profile = JSON.parse(localStorage.getItem('alitheaplate_profile') || '{}');
+        const userConditions = profile.conditions || "None reported";
+        const todayStr = new Date().toLocaleDateString();
+        const dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}')[todayStr] || { meals: [], workouts: [] };
+        
+        const recentMeals = dailyData.meals ? dailyData.meals.map(m => `${m.meal} (${m.calories}cals)`).join(", ") : "None logged";
+        const userName = profile.name || "there";
+
+        let cgmText = "";
+        if (tir || tar || tbr) {
+            cgmText = `CGM Metrics provided - Time In Range: ${tir || "N/A"}%, Time Above Range: ${tar || "N/A"}%, Time Below Range: ${tbr || "N/A"}%.`;
+        }
+
+        const prompt = `You are an expert, empathetic medical AI assistant. The user's name is ${userName}.
+        The user just recorded a Blood Glucose reading of ${reading} mg/dL.
+        ${cgmText}
+        User's context: "${userCtx}"
+        Medical Conditions: ${userConditions}.
+        Meals logged today: ${recentMeals}
+
+        Analyze this reading holistically. If they provided CGM metrics (TIR/TAR/TBR), evaluate those against standard clinical targets (e.g., TIR > 70%). Check their recent meals for carb/sugar spikes if the reading is high. Do not cause unnecessary alarm, but be medically precise.
+
+        Return ONLY a raw JSON object. Structure exactly like this:
+        {
+            "status": "e.g., In Target Range, Hyperglycemia, Hypoglycemia",
+            "feedback": "A reassuring, clinical paragraph explaining the reading based on their specific context, meals, and conditions."
+        }`;
+
+        try {
+            const response = await fetch("https://nutrisnap-api.aaronramthunmusic.workers.dev", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
+                })
+            });
+            
+            const data = await response.json();
+            const result = JSON.parse(data.candidates[0].content.parts[0].text);
+
+            pendingGlucose = {
+                reading: reading,
+                tir: tir,
+                tar: tar,
+                tbr: tbr,
+                status: result.status,
+                feedback: result.feedback
+            };
+
+            document.getElementById('bg-result-numbers').innerText = reading;
+            document.getElementById('bg-result-status').innerText = result.status;
+            document.getElementById('bg-result-feedback').innerText = result.feedback;
+
+            const statusEl = document.getElementById('bg-result-status');
+            statusEl.className = "text-2xl font-black mb-1 leading-tight " + 
+                (result.status.toLowerCase().includes("target") || result.status.toLowerCase().includes("normal") ? "text-emerald-500" : "text-amber-500");
+
+            document.getElementById('glucose-input-section').classList.add('hidden');
+            document.getElementById('glucose-result-section').classList.remove('hidden');
+
+        } catch (error) {
+            console.error("Glucose Analysis Failed:", error);
+            alert("Something went wrong analyzing your data. Please try again.");
+        } finally {
+            document.getElementById('glucose-loading').classList.add('hidden');
+        }
+    };
+
+    window.logFinalGlucose = function() {
+        if (!pendingGlucose) return;
+
+        const todayStr = new Date().toLocaleDateString();
+        let dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
+        
+        if (!dailyData[todayStr]) dailyData[todayStr] = { meals: [], workouts: [], vitals: [] };
+        if (!dailyData[todayStr].vitals) dailyData[todayStr].vitals = [];
+        
+        // Save it formatted so the Dashboard renderer automatically picks it up beautifully
+        let cgmLog = "";
+        if (pendingGlucose.tir) cgmLog = ` (TIR: ${pendingGlucose.tir}%)`;
+
+        dailyData[todayStr].vitals.unshift({
+            time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+            type: "Blood Glucose",
+            reading: `${pendingGlucose.reading} mg/dL${cgmLog}`, // Formatted for the UI card
+            raw_bg: pendingGlucose.reading, // Kept for the chart math
+            tir: pendingGlucose.tir,
+            tar: pendingGlucose.tar,
+            tbr: pendingGlucose.tbr,
+            status: pendingGlucose.status
+        });
+        
+        localStorage.setItem('alitheaplate_daily', JSON.stringify(dailyData));
+        updateDashboard();
+        closeGlucoseModal();
+    };
+
+    // --- GLUCOSE CHART & GMI LOGIC ---
+    let glucoseChartInstance = null;
+
+    window.renderGlucoseChart = function() {
+        const ctx = document.getElementById('glucoseChart');
+        if (!ctx) return;
+        if (glucoseChartInstance) glucoseChartInstance.destroy();
+
+        const dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
+        const labels = [];
+        const bgData = [];
+        const today = new Date();
+        
+        let sumBG = 0;
+        let countBG = 0;
+
+        for (let i = globalChartRange - 1; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(today.getDate() - i);
+            const dateStr = d.toLocaleDateString();
+            
+            let labelStr = '';
+            if (globalChartRange === 7) labelStr = d.toLocaleDateString([], { weekday: 'short' });
+            else if (globalChartRange === 30) labelStr = (i % 5 === 0) ? d.toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
+            else if (globalChartRange === 365) labelStr = (d.getDate() === 1) ? d.toLocaleDateString([], { month: 'short' }) : '';
+            else labelStr = (d.getMonth() === 0 && d.getDate() === 1) ? d.getFullYear().toString() : '';
+            
+            labels.push(labelStr);
+
+            let dailyAvgBG = null;
+            if (dailyData[dateStr] && dailyData[dateStr].vitals) {
+                // Find all glucose readings for the day and average them
+                const glucoseReadings = dailyData[dateStr].vitals.filter(v => v.type === "Blood Glucose" && v.raw_bg);
+                if (glucoseReadings.length > 0) {
+                    let daySum = 0;
+                    glucoseReadings.forEach(g => daySum += parseInt(g.raw_bg));
+                    dailyAvgBG = Math.round(daySum / glucoseReadings.length);
+                    
+                    sumBG += dailyAvgBG;
+                    countBG++;
+                }
+            }
+            bgData.push(dailyAvgBG);
+        }
+
+        // Calculate Glucose Management Indicator (GMI)
+        let chartLabel = 'Blood Glucose (mg/dL)';
+        if (countBG > 0) {
+            const overallAvg = sumBG / countBG;
+            // Standard GMI Formula: GMI(%) = 3.31 + (0.02392 * mean_BG)
+            const gmi = (3.31 + (0.02392 * overallAvg)).toFixed(1);
+            chartLabel = `Blood Glucose (mg/dL) - Est. GMI: ${gmi}%`;
+        }
+
+        glucoseChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{ 
+                    label: chartLabel, 
+                    data: bgData, 
+                    borderColor: '#6366f1', 
+                    backgroundColor: 'rgba(99, 102, 241, 0.2)', 
+                    borderWidth: 3, 
+                    tension: 0.4, 
+                    fill: true, 
+                    spanGaps: true 
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { suggestedMin: 70, suggestedMax: 180, grid: { color: '#27272a', drawBorder: false }, ticks: { font: { size: 10 }, color: '#9ca3af' } },
+                    x: { grid: { display: false, drawBorder: false }, ticks: { font: { size: 9 }, color: '#9ca3af', autoSkip: globalChartRange > 1 } }
+                },
+                plugins: { legend: { position: 'top', labels: { boxWidth: 0, font: { size: 12, weight: 'bold' }, color: '#a5b4fc' } } }
+            }
+        });
     };
 </script>
 </body>
