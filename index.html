@@ -661,7 +661,7 @@
     </div>
 
     <!-- HIDDEN PDF TEMPLATE (Strictly White/Black for Printing) -->
-    <div id="pdf-container" class="hidden">
+    <div id="pdf-container" class="absolute top-0 left-[-10000px] z-[-1]">
         <div id="clinical-report-template" class="bg-white text-black p-8 w-[720px] font-sans">
             <div class="border-b-4 border-gray-900 pb-4 mb-6 flex justify-between items-end">
                 <div class="flex items-center gap-4">
@@ -2593,20 +2593,18 @@
             } else actSection.style.display = 'none';
 
             // 7. Generate Document
-            const element = document.getElementById('clinical-report-template');
-            element.style.display = 'block'; 
+            const element = document.getElementById('clinical-report-template'); 
             
             const opt = {
                 margin:       0.5,
                 filename:     `Alithea_Clinical_Report_${profile.name || 'Patient'}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
+                html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
                 jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
             };
 
             await html2pdf().set(opt).from(element).save();
             
-            element.style.display = 'none'; 
             closeClinicalModal();
 
         } catch (error) {
