@@ -465,11 +465,16 @@
             </div>
         </div>
 		
-        <button id="log-meal-btn" class="w-full bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-zinc-950 font-black py-3.5 rounded-xl shadow-[0_0_15px_rgba(245,158,11,0.2)] mt-6 mb-8 transition-all">
-            <span id="dynamic-log-text">Log Meal</span>
-        </button>
+        <div class="flex gap-3 mt-6 mb-8">
+            <button onclick="returnToCapture()" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold py-3.5 rounded-xl shadow-sm transition-colors border border-zinc-700">
+                ⬅️ Back
+            </button>
+            <button id="log-meal-btn" class="flex-[2] bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-zinc-950 font-black py-3.5 rounded-xl shadow-[0_0_15px_rgba(245,158,11,0.2)] transition-all">
+                <span id="dynamic-log-text">Log Meal</span>
+            </button>
+        </div>
     </div>
-        
+    
     <div id="workout-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-zinc-900 border border-zinc-800 w-full sm:w-11/12 rounded-2xl p-6 max-h-[85vh] overflow-y-auto shadow-2xl relative">
             
@@ -555,9 +560,14 @@
                     </div>
                 </div>
 
-                <button onclick="logFinalWorkout()" class="w-full bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-zinc-950 font-black py-3.5 rounded-xl shadow-[0_0_15px_rgba(245,158,11,0.2)] mt-4 transition-all">
-                    Log this Activity
-                </button>
+                <div class="flex gap-3 mt-6 mb-8">
+            <button onclick="returnToWorkoutCapture()" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold py-3.5 rounded-xl shadow-sm transition-colors border border-zinc-700">
+                ⬅️ Back
+            </button>
+            <button id="log-workout-btn" onclick="logFinalWorkout()" class="flex-[2] bg-gradient-to-r from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-zinc-100 font-black py-3.5 rounded-xl shadow-lg transition-all">
+                Log Workout
+            </button>
+        </div>
             </div>
         </div>
     </div>
@@ -3529,28 +3539,80 @@
         });
     }
 	// Updated to accept a specific container ID
-    function renderImagePreviews(files, containerId) {
+    window.renderImagePreviews = function(files, containerId) {
         const gridContainer = document.getElementById(containerId);
         if (!gridContainer) return;
         
-        gridContainer.innerHTML = ''; // Clear out old previews
+        gridContainer.innerHTML = ''; 
         
-        files.forEach(file => {
+        files.forEach((file, index) => {
             const imgUrl = URL.createObjectURL(file);
             
             const wrapper = document.createElement('div');
-            wrapper.className = "relative aspect-square bg-gray-200 rounded-lg overflow-hidden shadow-sm border border-gray-300/50 mt-2";
+            wrapper.className = "relative aspect-square bg-zinc-800 rounded-lg overflow-hidden shadow-sm border border-zinc-700 mt-2 group";
             
             const img = document.createElement('img');
             img.src = imgUrl;
             img.className = "w-full h-full object-cover";
             
+            // Create the Delete 'X' Button
+            const delBtn = document.createElement('button');
+            delBtn.innerHTML = '✕';
+            delBtn.className = "absolute top-1 right-1 bg-red-500/80 hover:bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow-sm backdrop-blur-sm transition-colors";
+            delBtn.onclick = () => removeImage(containerId, index);
+            
             img.onload = () => { URL.revokeObjectURL(imgUrl); };
             
             wrapper.appendChild(img);
+            wrapper.appendChild(delBtn);
             gridContainer.appendChild(wrapper);
         });
-    }
+    };
+	
+	window.removeImage = function(containerId, index) {
+        if (containerId === 'thumbnail-preview-grid') {
+            // Remove from the meal array and re-render
+            mealFilesArray.splice(index, 1);
+            renderImagePreviews(mealFilesArray, containerId);
+            
+            const countText = document.getElementById('file-count-text');
+            const previewContainer = document.getElementById('file-preview-container');
+            
+            if (mealFilesArray.length > 0) {
+                countText.innerText = `📸 ${mealFilesArray.length} image${mealFilesArray.length > 1 ? 's' : ''} selected. Ready to scan!`;
+            } else {
+                previewContainer.classList.add('hidden'); // Hide if empty
+            }
+        } else if (containerId === 'workout-preview-grid') {
+            // Remove from the workout array and re-render
+            workoutFilesArray.splice(index, 1);
+            renderImagePreviews(workoutFilesArray, containerId);
+            
+            const countText = document.getElementById('workout-file-count');
+            if (workoutFilesArray.length > 0) {
+                countText.innerText = `📸 ${workoutFilesArray.length} image${workoutFilesArray.length > 1 ? 's' : ''} attached.`;
+            } else {
+                countText.classList.add('hidden'); // Hide if empty
+            }
+        }
+    };
+
+    window.returnToCapture = function() {
+        if (navigator.vibrate) navigator.vibrate(15);
+        // Switch screens without wiping the arrays or inputs
+        document.getElementById('screen-results').classList.add('hidden');
+        document.getElementById('screen-capture').classList.remove('hidden');
+    };
+	
+	window.returnToWorkoutCapture = function() {
+        if (navigator.vibrate) navigator.vibrate(15);
+        
+        // Hide the results screen and show the input screen
+        // IMPORTANT: Verify these IDs match your actual workout HTML!
+        document.getElementById('workout-result-section').classList.add('hidden');
+        document.getElementById('workout-input-section').classList.remove('hidden');
+    };
+	
 	// --- EVENING ALERT LOGIC ---
     window.checkEveningAlert = async function() {
         const todayStr = new Date().toLocaleDateString();
