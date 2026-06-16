@@ -2572,10 +2572,11 @@
             }
 
             // 3. Process Math Data for Timeframe
-            let sysSum = 0, diaSum = 0, bpCount = 0;
+            let offGridCount = 0;
+			let sysSum = 0, diaSum = 0, bpCount = 0;
             let hrSum = 0, hrCount = 0;
 			let bgSum = 0, bgCount = 0, tirSum = 0, tirCount = 0;
-            let mCals=0, mPro=0, mCarb=0, mNet=0, mFib=0, mSug=0, mFat=0, mSat=0, mSod=0, mChol=0, nutCount=0;
+            let mCals=0, mPro=0, mCarb=0, mNet=0, mFib=0, mSug=0, mFat=0, mSat=0, mSod=0, mChol=0, calCount=0, macroCount=0;
             let burnSum = 0, workoutCount = 0;
 
             const today = new Date();
@@ -2605,24 +2606,35 @@
 						}
                     });
                 }
-
-                // Nutrition
+				
+				// Nutrition
                 if (dayData.meals && dayData.meals.length > 0) {
+                    let dayHasCals = false;
+                    let dayHasMacros = false;
                     dayData.meals.forEach(m => {
-                        mCals += Number(m.calories) || 0;
-                        if (m.macros) {
-                            mPro += Number(m.macros.protein_g) || 0;
-                            mCarb += Number(m.macros.carbs_total_g) || 0;
-                            mNet += Number(m.macros.carbs_net_g) || 0;
-                            mFib += Number(m.macros.fiber_g) || 0;
-                            mSug += Number(m.macros.sugars_total_g) || 0;
-                            mFat += Number(m.macros.fat_total_g) || 0;
-                            mSat += Number(m.macros.fat_saturated_g) || 0;
-                            mSod += Number(m.macros.sodium_mg) || 0;
-                            mChol += Number(m.macros.cholesterol_mg) || 0;
+                        let cals = Number(m.calories) || 0;
+                        if (cals > 0) {
+                            mCals += cals;
+                            dayHasCals = true;
+                            // Only tally macros if this meal actually has the new data format!
+                            if (m.macros && Object.keys(m.macros).length > 0) {
+                                if (doPro) mPro += Number(m.macros.protein_g) || 0;
+                                if (doCarb) mCarb += Number(m.macros.carbs_total_g) || 0;
+                                if (doNet) mNet += Number(m.macros.carbs_net_g) || 0;
+                                if (doFib) mFib += Number(m.macros.fiber_g) || 0;
+                                if (doSug) mSug += Number(m.macros.sugars_total_g) || 0;
+                                if (doFat) mFat += Number(m.macros.fat_total_g) || 0;
+                                if (doSat) mSat += Number(m.macros.fat_saturated_g) || 0;
+                                if (doSod) mSod += Number(m.macros.sodium_mg) || 0;
+                                if (doChol) mChol += Number(m.macros.cholesterol_mg) || 0;
+                                dayHasMacros = true;
+                            }
+                        } else {
+                            offGridCount++;
                         }
                     });
-                    nutCount++;
+                    if (dayHasCals) calCount++; 
+                    if (dayHasMacros) macroCount++;
                 }
 
                 // Activity
@@ -2656,24 +2668,36 @@
             const nutSection = document.getElementById('pdf-nutrition-section');
             if (doCal || doPro || doCarb || doNet || doFib || doSug || doFat || doSat || doSod || doChol) {
                 let nHTML = '';
-                if (nutCount > 0) {
-                    if (doCal) nHTML += `<li><strong>Avg Calories:</strong> ${Math.round(mCals/nutCount)} kcal</li>`;
-                    if (doPro) nHTML += `<li><strong>Avg Protein:</strong> ${Math.round(mPro/nutCount)} g</li>`;
-                    if (doCarb) nHTML += `<li><strong>Avg Total Carbs:</strong> ${Math.round(mCarb/nutCount)} g</li>`;
-                    if (doNet) nHTML += `<li><strong>Avg Net Carbs:</strong> ${Math.round(mNet/nutCount)} g</li>`;
-                    if (doFib) nHTML += `<li><strong>Avg Fiber:</strong> ${Math.round(mFib/nutCount)} g</li>`;
-                    if (doSug) nHTML += `<li><strong>Avg Sugar:</strong> ${Math.round(mSug/nutCount)} g</li>`;
-                    if (doFat) nHTML += `<li><strong>Avg Total Fat:</strong> ${Math.round(mFat/nutCount)} g</li>`;
-                    if (doSat) nHTML += `<li><strong>Avg Saturated Fat:</strong> ${Math.round(mSat/nutCount)} g</li>`;
-                    if (doSod) nHTML += `<li><strong>Avg Sodium:</strong> ${Math.round(mSod/nutCount)} mg</li>`;
-                    if (doChol) nHTML += `<li><strong>Avg Cholesterol:</strong> ${Math.round(mChol/nutCount)} mg</li>`;
-                    nHTML += `<li class="mt-2 text-gray-500 text-xs">Based on ${nutCount} days of logged food.</li>`;
+                if (calCount > 0) {
+                    if (doCal) nHTML += `<li><strong>Avg Daily Calories:</strong> ${Math.round(mCals/calCount)} kcal</li>`;
+                    
+                    // Only divide the macros by the days that actually HAD macro data
+                    if (macroCount > 0) {
+                        if (doPro) nHTML += `<li><strong>Avg Daily Protein:</strong> ${Math.round(mPro/macroCount)} g</li>`;
+                        if (doCarb) nHTML += `<li><strong>Avg Daily Total Carbs:</strong> ${Math.round(mCarb/macroCount)} g</li>`;
+                        if (doNet) nHTML += `<li><strong>Avg Daily Net Carbs:</strong> ${Math.round(mNet/macroCount)} g</li>`;
+                        if (doFib) nHTML += `<li><strong>Avg Daily Fiber:</strong> ${Math.round(mFib/macroCount)} g</li>`;
+                        if (doSug) nHTML += `<li><strong>Avg Daily Sugar:</strong> ${Math.round(mSug/macroCount)} g</li>`;
+                        if (doFat) nHTML += `<li><strong>Avg Daily Total Fat:</strong> ${Math.round(mFat/macroCount)} g</li>`;
+                        if (doSat) nHTML += `<li><strong>Avg Daily Saturated Fat:</strong> ${Math.round(mSat/macroCount)} g</li>`;
+                        if (doSod) nHTML += `<li><strong>Avg Daily Sodium:</strong> ${Math.round(mSod/macroCount)} mg</li>`;
+                        if (doChol) nHTML += `<li><strong>Avg Daily Cholesterol:</strong> ${Math.round(mChol/macroCount)} mg</li>`;
+                    }
+                    
+                    // Add the smart disclaimer
+                    nHTML += `<li class="mt-4 text-xs text-zinc-500 italic border-t border-zinc-200 pt-3">Based on ${calCount} days of tracked food.`;
+                    if (offGridCount > 0) {
+                        nHTML += ` <br><span class="text-amber-600 font-medium">Clinical Note: ${offGridCount} "Off-Grid/Untracked" meals were excluded from these averages.</span>`;
+                    }
+                    nHTML += `</li>`;
                 } else {
-                    nHTML += `<li>No nutritional data recorded.</li>`;
+                    nHTML += `<li class="text-sm text-zinc-500">No tracked nutritional data recorded in this timeframe.</li>`;
                 }
                 document.getElementById('pdf-nutrition-list').innerHTML = nHTML;
                 nutSection.style.display = 'block';
-            } else nutSection.style.display = 'none';
+            } else {
+                nutSection.style.display = 'none';
+            }
 
             // 6. Inject Activity Math into PDF UI
             const actSection = document.getElementById('pdf-activity-section');
