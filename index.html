@@ -223,6 +223,7 @@
                         <option value="weight">Morning Weight</option>
                         <option value="bp">Blood Pressure</option>
 						<option value="glucose">Blood Glucose & GMI</option>
+						<option value="sleep">Sleep & Recovery</option>
 						<option value="hr">Heart Rate / Pulse (BPM)</option>
 						<option value="sodium">Sodium Intake</option>
                         <option value="fats">Fat Breakdown (Sat vs Unsat)</option>
@@ -266,6 +267,7 @@
                     <div id="chart-container-weight" class="relative h-48 w-full hidden"><canvas id="weightChart"></canvas></div>
                     <div id="chart-container-bp" class="relative h-48 w-full hidden"><canvas id="bpChart"></canvas></div>
 					<div id="chart-container-glucose" class="relative h-48 w-full hidden"><canvas id="glucoseChart"></canvas></div>
+					<div id="chart-container-sleep" class="relative h-48 w-full hidden"><canvas id="sleepChart"></canvas></div>
 					<div id="chart-container-hr" class="relative h-48 w-full hidden"><canvas id="hrChart"></canvas></div>
 					<div id="chart-container-sodium" class="relative h-48 w-full hidden"><canvas id="sodiumChart"></canvas></div>
                     <div id="chart-container-fats" class="relative h-48 w-full hidden"><canvas id="fatsChart"></canvas></div>
@@ -288,6 +290,7 @@
                     <button onclick="logUntracked()" class="bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 text-amber-500 text-[10px] font-bold py-1 px-2 rounded-md transition-colors shadow-sm">🍔 + Off-Grid</button>
                     <button onclick="openBPModal()" class="bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-400 text-[10px] font-bold py-1 px-2 rounded-md transition-colors shadow-sm">❤️ + Vitals</button>
                     <button onclick="openGlucoseModal()" class="bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 text-indigo-400 text-[10px] font-bold py-1 px-2 rounded-md transition-colors shadow-sm">🩸 + Glucose</button>
+					<button onclick="openSleepModal()" class="bg-sky-500/10 border border-sky-500/20 hover:bg-sky-500/20 text-sky-400 text-[10px] font-bold py-1 px-2 rounded-md transition-colors shadow-sm">🌙 + Sleep</button>
 					<button onclick="openWorkoutModal()" class="bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 text-blue-400 text-[10px] font-bold py-1 px-2 rounded-md transition-colors shadow-sm">💪 + Workout</button>
                 </div>
             </div>
@@ -645,9 +648,9 @@
                         <input type="checkbox" id="clin-act-burn" checked class="w-4 h-4 accent-amber-500">
                         <span class="ml-3 text-sm font-medium text-zinc-300">Active Calorie Burn (Exercise)</span>
                     </label>
-                    <label class="flex items-center p-3 border border-zinc-800/50 rounded-xl bg-zinc-950/50 opacity-60 cursor-not-allowed">
-                        <input type="checkbox" disabled class="w-4 h-4 accent-zinc-700">
-                        <span class="ml-3 text-sm font-medium text-zinc-500">Sleep Data <i class="text-[10px]">(Coming Soon)</i></span>
+                    <label class="flex items-center p-3 border border-zinc-800 rounded-xl cursor-pointer hover:border-amber-500 transition-all bg-zinc-950">
+                        <input type="checkbox" id="clin-act-sleep" checked class="w-4 h-4 accent-amber-500">
+                        <span class="ml-3 text-sm font-medium text-zinc-300">Sleep & Recovery</span>
                     </label>
                 </div>
             </div>
@@ -1084,6 +1087,92 @@
 
                 <button onclick="applyCalorieGoal()" class="w-full bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-zinc-950 font-black py-3.5 rounded-xl shadow-[0_0_15px_rgba(245,158,11,0.2)] mt-4 transition-all">
                     Apply this Goal
+                </button>
+            </div>
+        </div>
+    </div>
+	
+	<div id="sleep-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-zinc-900 border border-zinc-800 w-full sm:w-11/12 rounded-2xl p-6 max-h-[85vh] overflow-y-auto shadow-2xl relative">
+            
+            <div id="sleep-loading" class="hidden absolute inset-0 bg-zinc-900/95 z-10 flex flex-col items-center justify-center rounded-2xl">
+                <div class="loader mb-4 !border-t-sky-500"></div>
+                <p class="text-zinc-100 font-bold animate-pulse text-center">Analyzing recovery data...<br><span class="text-xs font-normal text-zinc-500">Consulting AI Coach</span></p>
+            </div>
+
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-black text-zinc-100 flex items-center gap-2">🌙 Sleep & Recovery</h2>
+                <button onclick="closeSleepModal()" class="text-zinc-500 hover:text-amber-500 font-bold text-xl transition-colors">✕</button>
+            </div>
+
+            <div id="sleep-input-section" class="space-y-4">
+                <div class="flex gap-4">
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-zinc-500 uppercase mb-2">Hours</label>
+                        <input type="number" id="sleep-hrs" placeholder="7" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 text-2xl text-center font-black text-sky-400 focus:outline-none focus:border-sky-500 shadow-sm transition-colors">
+                    </div>
+                    <div class="flex items-center justify-center pt-6 text-2xl font-black text-zinc-700">h</div>
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-zinc-500 uppercase mb-2">Minutes</label>
+                        <input type="number" id="sleep-mins" placeholder="15" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 text-2xl text-center font-black text-sky-400 focus:outline-none focus:border-sky-500 shadow-sm transition-colors">
+                    </div>
+                    <div class="flex items-center justify-center pt-6 text-2xl font-black text-zinc-700">m</div>
+                </div>
+
+                <div class="bg-zinc-950 p-4 rounded-xl border border-zinc-800">
+                    <label class="block text-xs font-bold text-zinc-500 uppercase mb-3">Wearable Metrics (Optional)</label>
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-zinc-400 mb-1">Deep Sleep (hrs:mins)</label>
+                            <input type="text" id="sleep-deep" placeholder="1:45" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm font-bold text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-zinc-400 mb-1">REM Sleep (hrs:mins)</label>
+                            <input type="text" id="sleep-rem" placeholder="1:30" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm font-bold text-zinc-200 focus:outline-none focus:border-fuchsia-500 transition-colors">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-zinc-400 mb-1">Resting HR (bpm)</label>
+                            <input type="number" id="sleep-rhr" placeholder="60" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm font-bold text-zinc-200 focus:outline-none focus:border-rose-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-zinc-400 mb-1">Recovery / Sleep Score</label>
+                            <input type="number" id="sleep-score" placeholder="85" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm font-bold text-zinc-200 focus:outline-none focus:border-emerald-500 transition-colors">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-zinc-500 uppercase mb-2">Context / Notes</label>
+                    <textarea id="sleep-context" placeholder="e.g., 'Woke up a lot' or 'Felt super rested'" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-sky-500 resize-none shadow-sm transition-colors" rows="2"></textarea>
+                </div>
+
+                <button onclick="calculateSleep()" class="w-full bg-gradient-to-r from-sky-500 to-sky-700 hover:from-sky-600 hover:to-sky-800 text-zinc-100 font-black py-3.5 rounded-xl mt-4 shadow-lg transition-all">
+                    Analyze Recovery
+                </button>
+            </div>
+
+            <div id="sleep-result-section" class="hidden space-y-4">
+                <div class="bg-sky-500/10 rounded-2xl p-5 mb-2 flex justify-between items-center shadow-inner border border-sky-500/20">
+                    <div class="pr-4">
+                        <h2 id="sleep-result-status" class="text-2xl font-black text-sky-400 mb-1 leading-tight">Status</h2>
+                    </div>
+                    <div class="text-right">
+                        <span id="sleep-result-numbers" class="text-3xl font-black text-zinc-100">7h 15m</span>
+                    </div>
+                </div>
+
+                <div class="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700">
+                    <h3 class="flex items-center font-bold text-sky-400 mb-2 uppercase tracking-wide text-xs">🧠 Recovery Analysis</h3>
+                    <p id="sleep-result-feedback" class="text-zinc-300 text-sm font-medium leading-relaxed"></p>
+                    <p class="text-[10px] text-zinc-500 italic mt-3 pt-2 border-t border-zinc-700 leading-tight">
+                        🤖 <strong>AI-Generated:</strong> This feedback is for informational purposes only.
+                    </p>
+                </div>
+
+                <button onclick="logFinalSleep()" class="w-full bg-gradient-to-r from-sky-500 to-sky-700 hover:from-sky-600 hover:to-sky-800 text-zinc-100 font-black py-3.5 rounded-xl mt-4 shadow-lg transition-all">
+                    Save to Dashboard
                 </button>
             </div>
         </div>
@@ -2073,64 +2162,68 @@
     window.calculateBP = async function() {
         const sys = document.getElementById('bp-systolic').value;
         const dia = document.getElementById('bp-diastolic').value;
-		const hr = document.getElementById('bp-hr').value || "Not provided";
+        const hr = document.getElementById('bp-hr').value;
         const userCtx = document.getElementById('bp-context').value.trim();
 
         if (!sys || !dia) {
-            alert("Please enter both systolic and diastolic numbers.");
+            alert("Please enter both systolic and diastolic values.");
             return;
         }
 
         document.getElementById('bp-loading').classList.remove('hidden');
 
-        // GATHER THE CONTEXT
         const profile = JSON.parse(localStorage.getItem('alitheaplate_profile') || '{}');
-		const userConditions = profile.conditions || "None reported";
         const todayStr = new Date().toLocaleDateString();
-        const dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}')[todayStr] || { meals: [], workouts: [] };
+        const dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}')[todayStr] || {};
+
+        // 1. Scan today's dashboard for the new Sleep and Glucose data!
+        let sleepContext = "No sleep data logged today.";
+        let bgContext = "No glucose data logged today.";
+
+        if (dailyData.vitals) {
+            const sleepLog = dailyData.vitals.find(v => v.type === "Sleep");
+            if (sleepLog) sleepContext = `${sleepLog.reading} (${sleepLog.status})`;
+
+            const bgLog = dailyData.vitals.find(v => v.type === "Blood Glucose");
+            if (bgLog) bgContext = `${bgLog.reading} (${bgLog.status})`;
+        }
+
+        // 2. Inject everything into a holistic prompt
+        const promptText = `Act as an expert cardiologist. The user logged a Blood Pressure of ${sys}/${dia} mmHg.
+        Resting HR: ${hr ? hr + ' BPM' : 'Not provided'}.
+        Context/Meds: "${userCtx}"
+        Reported Conditions: ${profile.conditions || 'None reported'}
         
-        // Format today's activities so the AI can read them easily
-        const recentMeals = dailyData.meals ? dailyData.meals.map(m => m.meal).join(", ") : "None logged";
-        const recentWorkouts = dailyData.workouts ? dailyData.workouts.map(w => w.summary).join(", ") : "None logged";
+        Other Vitals Logged Today:
+        - Sleep/Recovery: ${sleepContext}
+        - Blood Glucose: ${bgContext}
 
-        const userName = profile.name || "there";
-        const bpPrompt = `You are an expert, empathetic medical AI assistant.
-        The user's name is ${userName}. Address them by name to provide a comforting and personal touch.
-        The user (Age: ${profile.age || "Unknown"}, Sex: ${profile.sex || "Unknown"}) just recorded a blood pressure reading of ${sys}/${dia} and a Heart Rate of ${hr} BPM.
+        Analyze this BP reading holistically. If their sleep was poor or glucose was high, factor that physiological stress into your explanation of their blood pressure. 
 
-        User's direct context/medications for today: "${userCtx}"
-		Medical Conditions: ${userConditions}.
-        Meals logged today: ${recentMeals}
-        Workouts logged today: ${recentWorkouts}
-
-        Analyze this reading holistically. 
-        CRITICAL INSTRUCTION: Check their permanent Medications list. If they are on BP meds, factor that into your analysis. Check recent workouts and meals. Do not cause unnecessary alarm. If elevated, explain normal physiological responses to exercise or dietary correlations (like high sodium).
-
-        Return ONLY a raw JSON object. Do not use markdown formatting. Structure exactly like this:
+        Return ONLY a raw JSON object. Structure exactly like this:
         {
-            "status": "e.g., Normal, Elevated, Post-Workout Normal, Hypertension Stage 1",
-            "feedback": "A reassuring paragraph explaining the reading based on their specific context, medications, and recent activities."
+            "status": "e.g., Normal, Elevated, Stage 1 Hypertension",
+            "feedback": "A concise, empathetic clinical paragraph explaining the reading based on their specific context, sleep, and conditions."
         }`;
 
         try {
-            const response = await fetch("https://nutrisnap-api.aaronramthunmusic.workers.dev", {
+            const response = await fetch('https://nutrisnap-api.aaronramthunmusic.workers.dev', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: bpPrompt }] }],
-                    generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
+                    contents: [{ parts: [{ text: promptText }] }],
+                    generationConfig: { responseMimeType: "application/json", temperature: 0.3 }
                 })
             });
+
+            if (!response.ok) throw new Error("API failed");
             
             const data = await response.json();
-            if (!data.candidates) throw new Error("API Limit or Error");
-
             const result = JSON.parse(data.candidates[0].content.parts[0].text);
 
-            pendingBP = {
-                sys: sys,
-                dia: dia,
-				hr: hr,
+            // Temporarily store it so the "Save" button can grab it
+            window.pendingBP = {
+                sys: sys, dia: dia, hr: hr,
                 status: result.status,
                 feedback: result.feedback
             };
@@ -2139,17 +2232,17 @@
             document.getElementById('bp-result-status').innerText = result.status;
             document.getElementById('bp-result-feedback').innerText = result.feedback;
 
-            // Adjust color based on status text
+            // Color coding
             const statusEl = document.getElementById('bp-result-status');
             statusEl.className = "text-2xl font-black mb-1 leading-tight " + 
-                (result.status.toLowerCase().includes("normal") ? "text-emerald-700" : "text-amber-600");
+                (sys < 120 && dia < 80 ? "text-emerald-500" : (sys >= 130 || dia >= 80 ? "text-rose-500" : "text-amber-500"));
 
             document.getElementById('bp-input-section').classList.add('hidden');
             document.getElementById('bp-result-section').classList.remove('hidden');
 
         } catch (error) {
-            console.error("BP Analysis Failed:", error);
-            alert("Something went wrong analyzing your vitals. Please try again.");
+            console.error(error);
+            alert("Could not analyze vitals. Please try again.");
         } finally {
             document.getElementById('bp-loading').classList.add('hidden');
         }
@@ -2650,9 +2743,18 @@
             let dateStr = d.toLocaleDateString();
             
             if (allDailyData[dateStr]) {
+                let dailyCals = 0;
+                let mealCount = 0;
+                
+                if (allDailyData[dateStr].meals) {
+                    mealCount = allDailyData[dateStr].meals.length;
+                    allDailyData[dateStr].meals.forEach(m => dailyCals += (Number(m.calories) || 0));
+                }
+
                 trendData.push({
                     date: dateStr,
-                    calories_consumed: allDailyData[dateStr].calories || 0,
+                    calories_consumed: dailyCals,
+                    total_meals_logged: mealCount,
                     calories_burned: allDailyData[dateStr].exercise || 0,
                     workouts: allDailyData[dateStr].workouts ? allDailyData[dateStr].workouts.map(w => w.summary).join(', ') : "None",
                     vitals: allDailyData[dateStr].vitals ? allDailyData[dateStr].vitals.map(v => `${v.type}: ${v.reading || v.value}`).join(', ') : "None"
@@ -2666,7 +2768,11 @@
         
         7-Day Data: ${JSON.stringify(trendData)}
         
-        Provide a concise, 3-paragraph summary pointing out successes and 2 specific, actionable areas for improvement based on their goals. Keep it encouraging but factual. Format with standard text and line breaks (Do not use JSON).`;
+        CRITICAL CONTEXT: The user occasionally logs "Off-Grid" meals (which show up in the data as having 0 calories but increase the total_meals_logged count). These DO NOT mean the user is fasting or undereating. They specifically represent untracked overindulgence (e.g., alcohol, heavy foods) where the user chose not to log the exact calories to avoid tracking fatigue or guilt. 
+        
+        Provide a concise, 3-paragraph summary. Point out successes and 2 specific, actionable areas for improvement based on their goals. 
+        
+        When you see days with unusually low calories but logged meals, address the off-grid indulgence gracefully. Do not warn them about undereating or malnutrition. Instead, focus your advice on bouncing back, consistency, and maintaining balance without shame. Format with standard text and line breaks (Do not use JSON).`;
 
         document.getElementById('report-loading-spinner').classList.remove('hidden');
 
@@ -3549,6 +3655,7 @@ END:VCALENDAR`.replace(/\n/g, '\r\n');
         if (selectedType === 'calories') renderCalorieChart();
 		if (selectedType === 'bp') renderBPChart(); // Add this line!
 		if (selectedType === 'glucose') renderGlucoseChart();
+		if (selectedType === 'sleep') renderSleepChart();
 		if (selectedType === 'weight') document.getElementById('weight-controls').classList.remove('hidden');
 		if (selectedType === 'sodium') renderSodiumChart();
         if (selectedType === 'fats') renderFatsChart();
@@ -4373,6 +4480,198 @@ END:VCALENDAR`.replace(/\n/g, '\r\n');
                     x: { grid: { display: false, drawBorder: false }, ticks: { font: { size: 9 }, color: '#9ca3af', autoSkip: globalChartRange > 1 } }
                 },
                 plugins: { legend: { position: 'top', labels: { boxWidth: 0, font: { size: 12, weight: 'bold' }, color: '#a5b4fc' } } }
+            }
+        });
+    };
+	
+	// --- SLEEP & RECOVERY LOGIC ---
+    let pendingSleep = null;
+
+    window.openSleepModal = function() {
+        document.getElementById('sleep-hrs').value = '';
+        document.getElementById('sleep-mins').value = '';
+        document.getElementById('sleep-deep').value = '';
+        document.getElementById('sleep-rem').value = '';
+        document.getElementById('sleep-rhr').value = '';
+        document.getElementById('sleep-score').value = '';
+        document.getElementById('sleep-context').value = '';
+        
+        document.getElementById('sleep-input-section').classList.remove('hidden');
+        document.getElementById('sleep-result-section').classList.add('hidden');
+        document.getElementById('sleep-loading').classList.add('hidden');
+        
+        pendingSleep = null;
+        document.getElementById('sleep-modal').classList.remove('hidden');
+    };
+
+    window.closeSleepModal = function() {
+        document.getElementById('sleep-modal').classList.add('hidden');
+    };
+
+    window.calculateSleep = async function() {
+        const hrs = parseInt(document.getElementById('sleep-hrs').value) || 0;
+        const mins = parseInt(document.getElementById('sleep-mins').value) || 0;
+        const deep = document.getElementById('sleep-deep').value;
+        const rem = document.getElementById('sleep-rem').value;
+        const rhr = document.getElementById('sleep-rhr').value;
+        const score = document.getElementById('sleep-score').value;
+        const userCtx = document.getElementById('sleep-context').value.trim();
+
+        if (hrs === 0 && mins === 0) {
+            alert("Please enter your total sleep duration.");
+            return;
+        }
+
+        document.getElementById('sleep-loading').classList.remove('hidden');
+
+        const profile = JSON.parse(localStorage.getItem('alitheaplate_profile') || '{}');
+        const todayStr = new Date().toLocaleDateString();
+        const dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}')[todayStr] || { workouts: [] };
+        const recentWorkouts = dailyData.workouts && dailyData.workouts.length > 0 ? "Yes" : "No";
+
+        const totalSleepStr = `${hrs}h ${mins}m`;
+        let wearableText = "";
+        if (deep || rem || rhr || score) {
+            wearableText = `Advanced Metrics - Deep: ${deep || 'N/A'}, REM: ${rem || 'N/A'}, Resting HR: ${rhr || 'N/A'} bpm, Recovery/Sleep Score: ${score || 'N/A'}.`;
+        }
+
+        const prompt = `You are an expert sleep and recovery coach. 
+        The user slept for ${totalSleepStr}.
+        ${wearableText}
+        User's notes: "${userCtx}"
+        Did they workout yesterday?: ${recentWorkouts}
+
+        Analyze this recovery data. If they provided wearable metrics (Deep/REM/RHR/Score), evaluate their sleep architecture and nervous system recovery. Keep it encouraging, concise, and actionable.
+
+        Return ONLY a raw JSON object. Structure exactly like this:
+        {
+            "status": "e.g., Optimal Recovery, Fair Sleep, Needs Rest",
+            "feedback": "A concise paragraph explaining their recovery status based on the duration and advanced metrics provided."
+        }`;
+
+        try {
+            const response = await fetch("https://nutrisnap-api.aaronramthunmusic.workers.dev", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: { responseMimeType: "application/json", temperature: 0.3 }
+                })
+            });
+            
+            const data = await response.json();
+            const result = JSON.parse(data.candidates[0].content.parts[0].text);
+
+            const totalMins = (hrs * 60) + mins;
+
+            pendingSleep = {
+                displayStr: totalSleepStr,
+                totalMins: totalMins,
+                deep: deep,
+                rem: rem,
+                rhr: rhr,
+                score: score,
+                status: result.status,
+                feedback: result.feedback
+            };
+
+            document.getElementById('sleep-result-numbers').innerText = totalSleepStr;
+            document.getElementById('sleep-result-status').innerText = result.status;
+            document.getElementById('sleep-result-feedback').innerText = result.feedback;
+
+            const statusEl = document.getElementById('sleep-result-status');
+            statusEl.className = "text-2xl font-black mb-1 leading-tight " + 
+                (result.status.toLowerCase().includes("optimal") || result.status.toLowerCase().includes("good") ? "text-sky-400" : "text-amber-500");
+
+            document.getElementById('sleep-input-section').classList.add('hidden');
+            document.getElementById('sleep-result-section').classList.remove('hidden');
+
+        } catch (error) {
+            console.error("Sleep Analysis Failed:", error);
+            alert("Something went wrong analyzing your data. Please try again.");
+        } finally {
+            document.getElementById('sleep-loading').classList.add('hidden');
+        }
+    };
+
+    window.logFinalSleep = function() {
+        if (!pendingSleep) return;
+
+        const todayStr = new Date().toLocaleDateString();
+        let dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
+        
+        if (!dailyData[todayStr]) dailyData[todayStr] = { meals: [], workouts: [], vitals: [] };
+        if (!dailyData[todayStr].vitals) dailyData[todayStr].vitals = [];
+        
+        let scoreLog = pendingSleep.score ? ` (Score: ${pendingSleep.score})` : "";
+
+     dailyData[todayStr].vitals.unshift({
+         time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+         type: "Sleep",
+         reading: `${pendingSleep.displayStr}${scoreLog}`, 
+         totalMins: pendingSleep.totalMins, 
+         rhr: pendingSleep.rhr,
+         status: pendingSleep.status
+     });
+        
+        localStorage.setItem('alitheaplate_daily', JSON.stringify(dailyData));
+        updateDashboard();
+        closeSleepModal();
+    };
+
+    let sleepChartInstance = null;
+
+    window.renderSleepChart = function() {
+        const ctx = document.getElementById('sleepChart');
+        if (!ctx) return;
+        if (sleepChartInstance) sleepChartInstance.destroy();
+
+        const dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
+        const labels = [];
+        const sleepData = [];
+        const today = new Date();
+
+        for (let i = globalChartRange - 1; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(today.getDate() - i);
+            const dateStr = d.toLocaleDateString();
+            
+            let labelStr = '';
+            if (globalChartRange === 7) labelStr = d.toLocaleDateString([], { weekday: 'short' });
+            else if (globalChartRange === 30) labelStr = (i % 5 === 0) ? d.toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
+            else if (globalChartRange === 365) labelStr = (d.getDate() === 1) ? d.toLocaleDateString([], { month: 'short' }) : '';
+            else labelStr = (d.getMonth() === 0 && d.getDate() === 1) ? d.getFullYear().toString() : '';
+            
+            labels.push(labelStr);
+
+            let hrsSlept = 0;
+            if (dailyData[dateStr] && dailyData[dateStr].vitals) {
+                const sleepLog = dailyData[dateStr].vitals.find(v => v.type === "Sleep" && v.totalMins);
+                if (sleepLog) {
+                    hrsSlept = (sleepLog.totalMins / 60).toFixed(1);
+                }
+            }
+            sleepData.push(hrsSlept);
+        }
+
+        sleepChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{ 
+                    label: 'Hours Slept', 
+                    data: sleepData, 
+                    backgroundColor: '#38bdf8',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { suggestedMin: 0, suggestedMax: 10, grid: { color: '#27272a', drawBorder: false }, ticks: { font: { size: 10 }, color: '#9ca3af' } },
+                    x: { grid: { display: false, drawBorder: false }, ticks: { font: { size: 9 }, color: '#9ca3af', autoSkip: globalChartRange > 1 } }
+                },
+                plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 12, weight: 'bold' }, color: '#7dd3fc' } } }
             }
         });
     };
