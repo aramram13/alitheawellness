@@ -309,7 +309,7 @@
            
            <div class="w-full max-w-xs mx-auto mb-4">
                <label class="block text-xs font-bold text-zinc-500 uppercase mb-2 text-center">Meal Type</label>
-               <select id="meal-type-select" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-zinc-200 font-bold focus:outline-none focus:border-amber-500 appearance-none text-center shadow-sm transition-colors">
+               <select id="meal-type-select" onchange="updateDynamicLogText()" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-zinc-200 font-bold focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors cursor-pointer text-center">
                    <option value="Breakfast">🍳 Breakfast</option>
                    <option value="Lunch">🥪 Lunch</option>
                    <option value="Dinner">🍽️ Dinner</option>
@@ -357,7 +357,7 @@
         </div>
 		
         <button onclick="processImage()" class="w-full bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-zinc-950 font-black py-3.5 rounded-xl shadow-[0_0_15px_rgba(245,158,11,0.2)] mt-6 transition-all">
-            Analyze Meal
+            Analyze Item(s)
         </button>
     
     </div> 
@@ -466,7 +466,7 @@
         </div>
 		
         <button id="log-meal-btn" class="w-full bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-zinc-950 font-black py-3.5 rounded-xl shadow-[0_0_15px_rgba(245,158,11,0.2)] mt-6 mb-8 transition-all">
-            Log this Meal
+            <span id="dynamic-log-text">Log Meal</span>
         </button>
     </div>
         
@@ -4506,6 +4506,20 @@ END:VCALENDAR`.replace(/\n/g, '\r\n');
 
     window.closeSleepModal = function() {
         document.getElementById('sleep-modal').classList.add('hidden');
+    };
+	
+	// --- DYNAMIC MICROCOPY LOGIC ---
+    window.updateDynamicLogText = function() {
+        const dropdown = document.getElementById('meal-type-select'); 
+        const logText = document.getElementById('dynamic-log-text');
+        
+        if (dropdown && logText) {
+            // Get the text of whatever option is currently selected
+            const selectedMeal = dropdown.options[dropdown.selectedIndex].text;
+            
+            // Inject it into the button
+            logText.innerText = `Log ${selectedMeal}`;
+        }
     };
 
     window.calculateSleep = async function() {
