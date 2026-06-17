@@ -2232,7 +2232,7 @@
             const result = JSON.parse(data.candidates[0].content.parts[0].text);
 
             // Temporarily store it so the "Save" button can grab it
-            window.pendingBP = {
+            pendingBP = {
                 sys: sys, dia: dia, hr: hr,
                 status: result.status,
                 feedback: result.feedback
