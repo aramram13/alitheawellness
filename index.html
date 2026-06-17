@@ -475,6 +475,29 @@
         </div>
     </div>
     
+	<div id="vital-detail-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-sm overflow-hidden flex flex-col shadow-2xl origin-bottom transition-all duration-300">
+        <div class="p-6">
+            <div class="flex justify-between items-start mb-4">
+                <h3 id="vital-detail-title" class="text-xl font-black text-zinc-100">Vital Details</h3>
+                <span id="vital-detail-time" class="text-xs text-zinc-500 font-medium"></span>
+            </div>
+            
+            <p id="vital-detail-reading" class="text-3xl font-black text-rose-500 mb-6 tracking-tight"></p>
+            
+            <div class="bg-zinc-950 rounded-xl p-4 border border-zinc-800">
+                <p class="text-[10px] text-zinc-500 uppercase font-bold mb-2 tracking-wider">AI Feedback & Notes</p>
+                <p id="vital-detail-feedback" class="text-sm text-zinc-300 leading-relaxed"></p>
+            </div>
+        </div>
+        <div class="p-4 bg-zinc-950 border-t border-zinc-800">
+            <button onclick="document.getElementById('vital-detail-modal').classList.add('hidden')" class="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold py-3.5 rounded-xl transition-colors">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+	
     <div id="workout-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-zinc-900 border border-zinc-800 w-full sm:w-11/12 rounded-2xl p-6 max-h-[85vh] overflow-y-auto shadow-2xl relative">
             
@@ -959,6 +982,10 @@
                 </div>
                 <div class="flex gap-3">
                     <div class="flex-1">
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Time</label>
+                        <input type="text" id="edit-meal-time" placeholder="e.g. 8:00 PM" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div class="flex-[1.5]">
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Calories</label>
                         <input type="number" id="edit-meal-cals" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
                     </div>
@@ -1015,6 +1042,10 @@
                 </div>
                 <div class="flex gap-3">
                     <div class="flex-1">
+                        <label class="block text-[10px] font-bold text-blue-700 uppercase mb-1">Time</label>
+                        <input type="text" id="edit-workout-time" placeholder="e.g. 8:00 PM" class="w-full bg-white border border-blue-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div class="flex-[1.5]">
                         <label class="block text-[10px] font-bold text-blue-700 uppercase mb-1">Calories Burned</label>
                         <input type="number" id="edit-workout-cals" class="w-full bg-white border border-blue-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
                     </div>
@@ -1916,15 +1947,50 @@
         document.getElementById('meal-modal').classList.add('hidden');
     };
 
-    window.toggleMealEdit = function() {
+    // --- VITAL DETAILS MODAL LOGIC ---
+    window.openVitalDetail = function(index) {
+        if (navigator.vibrate) navigator.vibrate(15);
+        
+        const viewedStr = viewedDate.toLocaleDateString();
+        let dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
+        
+        // Make sure we have data for this day
+        if (!dailyData[viewedStr] || !dailyData[viewedStr].vitals) return;
+        
+        const vital = dailyData[viewedStr].vitals[index];
+        if (!vital) return;
+
+        document.getElementById('vital-detail-title').innerText = vital.type;
+        document.getElementById('vital-detail-time').innerText = vital.time || '';
+
+        // Format the big reading text based on what kind of vital it is
+        let displayValue = '';
+        if (vital.type === 'Blood Pressure') {
+            displayValue = `${vital.sys}/${vital.dia} mmHg`;
+        } else if (vital.type === 'Sleep') {
+            displayValue = `${Math.floor(vital.totalMins / 60)}h ${vital.totalMins % 60}m`;
+        } else {
+            displayValue = vital.value || 'Recorded';
+        }
+
+        document.getElementById('vital-detail-reading').innerText = displayValue;
+        
+        // Inject the feedback, or provide a default fallback if none exists
+        document.getElementById('vital-detail-feedback').innerText = vital.feedback || "No additional feedback or notes were recorded for this entry.";
+
+        // Show the modal
+        document.getElementById('vital-detail-modal').classList.remove('hidden');
+    };
+	
+	window.toggleMealEdit = function() {
         const viewedStr = viewedDate.toLocaleDateString();
         let dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
         const mealData = dailyData[viewedStr].meals[window.currentMealEditIndex];
         
-        // Populate the inputs with the existing data
         document.getElementById('edit-meal-type').value = mealData.type || "Snack";
         document.getElementById('edit-meal-name').value = mealData.meal;
         document.getElementById('edit-meal-cals').value = mealData.calories;
+        document.getElementById('edit-meal-time').value = mealData.time; // 🚨 NEW
         
         document.getElementById('meal-edit-form').classList.toggle('hidden');
     };
@@ -1936,10 +2002,10 @@
         let dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
         let mealToEdit = dailyData[viewedStr].meals[window.currentMealEditIndex];
         
-        // Overwrite the variables
         mealToEdit.type = document.getElementById('edit-meal-type').value;
         mealToEdit.meal = document.getElementById('edit-meal-name').value;
         mealToEdit.calories = parseInt(document.getElementById('edit-meal-cals').value) || 0;
+        mealToEdit.time = document.getElementById('edit-meal-time').value; // 🚨 NEW
         
         localStorage.setItem('alitheaplate_daily', JSON.stringify(dailyData));
         
@@ -2122,16 +2188,17 @@
     window.logFinalWorkout = function() {
         if (!pendingWorkout) return;
 
-        const todayStr = new Date().toLocaleDateString();
+        // 🚨 CHANGED: Use viewedDate instead of new Date()
+        const targetDateStr = viewedDate.toLocaleDateString();
         let dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
         
-        if (!dailyData[todayStr]) dailyData[todayStr] = { meals: [], exercise: 0, workouts: [] };
-        if (!dailyData[todayStr].workouts) dailyData[todayStr].workouts = [];
+        if (!dailyData[targetDateStr]) dailyData[targetDateStr] = { meals: [], exercise: 0, workouts: [] };
+        if (!dailyData[targetDateStr].workouts) dailyData[targetDateStr].workouts = [];
         
-        const currentExercise = parseInt(dailyData[todayStr].exercise) || 0;
-        dailyData[todayStr].exercise = currentExercise + pendingWorkout.calories;
+        const currentExercise = parseInt(dailyData[targetDateStr].exercise) || 0;
+        dailyData[targetDateStr].exercise = currentExercise + pendingWorkout.calories;
         
-        dailyData[todayStr].workouts.unshift({
+        dailyData[targetDateStr].workouts.unshift({
             time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
             description: pendingWorkout.description,
             intensity: pendingWorkout.intensity,
@@ -2141,8 +2208,7 @@
         });
         
         localStorage.setItem('alitheaplate_daily', JSON.stringify(dailyData));
-        
-        if (navigator.vibrate) navigator.vibrate(50); // NEW: Tiny physical buzz
+        if (navigator.vibrate) navigator.vibrate(50); 
         
         updateDashboard();
         closeWorkoutModal();
@@ -2600,21 +2666,28 @@
 
                 // Vitals
                 if (dayData.vitals) {
-                    dayData.vitals.forEach(v => {
-                        if (doBp && v.type === "Blood Pressure" && v.reading) {
-                            let parts = v.reading.split('/');
-                            if (parts.length === 2) {
-                                sysSum += parseInt(parts[0]); diaSum += parseInt(parts[1]); bpCount++;
-                            }
-                        }
-                        if (doHr && v.hr && v.hr !== "Not provided") {
-                            hrSum += parseInt(v.hr); hrCount++;
-                        }
-						if (doBg && v.type === "Blood Glucose" && v.raw_bg) {
-                        bgSum += parseInt(v.raw_bg); bgCount++;
-                        if (v.tir) { tirSum += parseInt(v.tir); tirCount++; }
-						}
-                    });
+                    dayData.vitals.forEach((v, index) => {
+                let icon = '❤️';
+                if (v.type === 'Blood Pressure') icon = '🩸';
+                if (v.type === 'Sleep') icon = '💤';
+
+                let displayValue = '';
+                if (v.type === 'Blood Pressure') displayValue = `${v.sys}/${v.dia} mmHg${v.hr ? ' | HR: ' + v.hr : ''}`;
+                else if (v.type === 'Sleep') displayValue = `Score: ${v.score || '--'} | ${Math.floor(v.totalMins/60)}h ${v.totalMins%60}m`;
+                else displayValue = v.value;
+
+                // 🚨 NEW: Added onclick and min-w-0 / whitespace-normal to fix mobile clipping!
+                vHTML += `
+                <div onclick="openVitalDetail(${index})" class="flex items-center justify-between bg-zinc-900 border border-zinc-800 p-3.5 rounded-xl mb-2 cursor-pointer hover:bg-zinc-800 transition-colors shadow-sm">
+                    <div class="flex items-center gap-3 w-full">
+                        <div class="text-2xl">${icon}</div>
+                        <div class="flex-1 min-w-0"> <p class="text-sm font-bold text-zinc-100">${v.type}</p>
+                            <p class="text-xs text-zinc-400 whitespace-normal break-words leading-relaxed mt-0.5">${displayValue}</p>
+                        </div>
+                        <div class="text-xs text-zinc-500 whitespace-nowrap ml-2 font-medium">${v.time || ''}</div>
+                    </div>
+                </div>`;
+            });
                 }
 				
 				// Nutrition
@@ -2915,6 +2988,7 @@
         
         document.getElementById('edit-workout-summary').value = workoutData.summary || "Workout";
         document.getElementById('edit-workout-cals').value = workoutData.calories;
+        document.getElementById('edit-workout-time').value = workoutData.time; // 🚨 NEW
         
         document.getElementById('workout-edit-form').classList.toggle('hidden');
     };
@@ -2925,7 +2999,6 @@
         const viewedStr = viewedDate.toLocaleDateString();
         let dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
         
-        // We have to math out the difference so your daily total updates correctly!
         const oldCals = dailyData[viewedStr].workouts[window.currentWorkoutEditIndex].calories;
         const newCals = parseInt(document.getElementById('edit-workout-cals').value) || 0;
         const difference = newCals - oldCals;
@@ -2934,6 +3007,7 @@
         
         dailyData[viewedStr].workouts[window.currentWorkoutEditIndex].summary = document.getElementById('edit-workout-summary').value;
         dailyData[viewedStr].workouts[window.currentWorkoutEditIndex].calories = newCals;
+        dailyData[viewedStr].workouts[window.currentWorkoutEditIndex].time = document.getElementById('edit-workout-time').value; // 🚨 NEW
         
         localStorage.setItem('alitheaplate_daily', JSON.stringify(dailyData));
         
@@ -3497,39 +3571,34 @@
         logMealBtnEl.addEventListener('click', () => {
             if (!pendingMeal) return;
             
-            const todayStr = new Date().toLocaleDateString();
+            // 🚨 CHANGED: Use viewedDate instead of new Date() to allow retroactive logging
+            const targetDateStr = viewedDate.toLocaleDateString();
             let dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
             
-            if (!dailyData[todayStr]) {
-                dailyData[todayStr] = { meals: [], exercise: 0 };
+            if (!dailyData[targetDateStr]) {
+                dailyData[targetDateStr] = { meals: [], exercise: 0 };
             }
             
-            // Add pending meal to today's log with full details
-            dailyData[todayStr].meals.unshift({
+            dailyData[targetDateStr].meals.unshift({
                 time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
                 type: pendingMeal.type || "Meal",
                 meal: pendingMeal.meal,
                 score: pendingMeal.score,
                 calories: pendingMeal.calories,
-				macros: pendingMeal.macros || {},
+                macros: pendingMeal.macros || {},
                 positives: pendingMeal.positives || [],
                 negatives: pendingMeal.negatives || [],
                 recommendation: pendingMeal.recommendation || ""
             });
             
             localStorage.setItem('alitheaplate_daily', JSON.stringify(dailyData));
+            if (navigator.vibrate) navigator.vibrate(50);
             
-			if (navigator.vibrate) navigator.vibrate(50);
-			
-            // Clear pending meal, update UI, and return home
             pendingMeal = null;
+            
+            // 🚨 CHANGED: Removed the forceful reset to "Today" so you stay on the past day!
             updateDashboard();
             
-            // Force the dashboard to look at 'Today' if they were looking at a past date
-            viewedDate = new Date(); 
-            updateDashboard();
-            
-            // Reset file input and go to dashboard
             document.getElementById('image-upload').value = '';
             mealFilesArray = [];
             document.getElementById('user-context').value = '';
