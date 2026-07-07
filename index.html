@@ -317,6 +317,10 @@
                    <option value="Beverage">☕ Beverage</option>
                    <option value="Dessert">🍰 Dessert</option>
                </select>
+			   <div class="mt-4 flex items-center justify-center gap-3 bg-zinc-900 border border-zinc-800 rounded-xl p-3 w-full max-w-xs mx-auto shadow-sm">
+            <input type="checkbox" id="zen-mode-toggle" class="w-5 h-5 text-amber-500 bg-zinc-950 border-zinc-700 rounded focus:ring-amber-500 focus:ring-2 transition-colors cursor-pointer">
+            <label for="zen-mode-toggle" class="text-sm font-bold text-zinc-400 cursor-pointer select-none">Zen Mode (Track Macros, No Critiques)</label>
+        </div>
            </div>
 
            <div class="flex w-full max-w-xs mx-auto bg-zinc-900 border border-zinc-800 rounded-xl p-1 mb-6">
@@ -3456,6 +3460,18 @@
 
             const result = JSON.parse(data.candidates[0].content.parts[0].text);
 
+            // --- ZEN MODE INTERCEPTOR ---
+            const zenToggle = document.getElementById('zen-mode-toggle');
+            const isZen = zenToggle && zenToggle.checked;
+            
+            if (isZen) {
+                result.health_score = "N/A";
+                result.positives = ["Mindful Eating: You tracked your food without judgment!"];
+                result.negatives = [];
+                result.recommendation = "Balance is vital for long-term success. You chose to log this meal guilt-free. Enjoy your food and the moment!";
+                result.targeted_metrics = []; // Hide clinical deep dives
+            }
+
             pendingMeal = {
                 type: document.getElementById('meal-type-select').value,
                 meal: result.meal_identified,
@@ -3467,7 +3483,7 @@
                 recommendation: result.recommendation
             };
 
-            document.getElementById('result-status').innerText = result.health_score >= 70 ? "Great Choice!" : "Needs Tweaking";
+            document.getElementById('result-status').innerText = isZen ? "Zen Mode Active" : (result.health_score >= 70 ? "Great Choice!" : "Needs Tweaking");
             document.getElementById('detected-meal').innerText = "Detected: " + result.meal_identified;
             document.getElementById('score-text').innerText = result.health_score;
             document.getElementById('detected-calories').innerText = result.calories || 0;
@@ -3476,7 +3492,6 @@
             const deepDiveContainer = document.getElementById('deep-dive-container');
             if (result.targeted_metrics && result.targeted_metrics.length > 0) {
                 deepDiveContainer.innerHTML = result.targeted_metrics.map(metric => {
-                    // Automatically color-code the cards based on the AI's assessment
                     let colorClass = "bg-emerald-500/10 border-emerald-500/20 text-emerald-400";
                     let icon = "✅";
                     
@@ -3507,13 +3522,18 @@
             document.getElementById('recommendation-text').innerText = result.recommendation;
 
             const circle = document.querySelector('.score-circle');
-            const offset = 213.6 - (result.health_score / 100) * 213.6;
-            circle.style.strokeDashoffset = offset;
+            circle.classList.remove('text-emerald-500', 'text-amber-500', 'text-red-500', 'text-zinc-500');
             
-            circle.classList.remove('text-emerald-500', 'text-amber-500', 'text-red-500');
-            if (result.health_score >= 70) circle.classList.add('text-emerald-500');
-            else if (result.health_score >= 40) circle.classList.add('text-amber-500');
-            else circle.classList.add('text-red-500');
+            if (isZen) {
+                circle.style.strokeDashoffset = 0; // Full circle
+                circle.classList.add('text-zinc-500'); // Neutral gray
+            } else {
+                const offset = 213.6 - (result.health_score / 100) * 213.6;
+                circle.style.strokeDashoffset = offset;
+                if (result.health_score >= 70) circle.classList.add('text-emerald-500');
+                else if (result.health_score >= 40) circle.classList.add('text-amber-500');
+                else circle.classList.add('text-red-500');
+            }
 
             clearInterval(loadingInterval);
             navigateTo('screen-results');
