@@ -3378,10 +3378,13 @@
                CRITICAL INSTRUCTION: Cross-reference their medications. If a food item negatively interacts with their listed medication (e.g., Grapefruit and Statins), warn them in the "considerations". Tailor your final recommendation to support their overarching fitness goal.
                
                Provide a "Smart Deep Dive" tailored to their dietary focus (e.g., estimate sodium/fat for Heart Healthy, net carbs/sugar for Diabetic, protein/calories for Fitness).
+               
+               Before outputting the final macros, use the 'calculation_logic' field to explicitly state the serving size you found on the label or image, the number of servings the user consumed, and the exact math you used to reach the final numbers.
 
                Return ONLY a raw JSON object. Do not use markdown formatting. Structure exactly like this:
                {
                    "meal_identified": "Name of meal or recipe",
+                   "calculation_logic": "Step-by-step math explanation showing how you calculated the macros",
                    "health_score": number 0-100,
                    "calories": number,
                    "macros": {
@@ -3415,9 +3418,12 @@
                 requestParts.push({ inline_data: { mime_type: mimeType, data: base64 } });
             });
 
+            // 🚨 NEW: Drop the temperature to 0.0 if scanning a strict label/recipe for better math
+            const aiTemp = scanMode === 'recipe' ? 0.0 : 0.4;
+
             const requestBody = {
                 contents: [{ parts: requestParts }],
-                generationConfig: { responseMimeType: "application/json", temperature: 0.4 }
+                generationConfig: { responseMimeType: "application/json", temperature: aiTemp }
             };
 
             const url = "https://nutrisnap-api.aaronramthunmusic.workers.dev";
