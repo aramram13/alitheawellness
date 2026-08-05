@@ -1904,18 +1904,29 @@
 
         // Render Vitals
         if (vitals.length > 0) {
-            historyHTML += vitals.map((item, index) => `
-                <div class="flex justify-between items-center bg-zinc-900 hover:bg-zinc-800 p-3 rounded-lg border border-zinc-800 mb-2 relative pr-10 transition-colors">
-                    <div class="truncate pr-2 flex-grow">
-                        <p class="text-xs text-rose-400 font-medium">${item.time} • Vitals</p>
-                        <p class="text-sm font-bold text-zinc-200 truncate">Blood Pressure: ${item.reading}</p>
-                    </div>
-                    <div class="text-right">
-                        <div class="bg-rose-500/10 text-rose-400 border border-rose-500/20 font-bold px-2 py-0.5 rounded text-[10px] inline-block shadow-sm mt-1">${item.status}</div>
+            historyHTML += vitals.map((item, index) => {
+                let icon = '❤️';
+                if (item.type === 'Blood Pressure') icon = '🩸';
+                if (item.type === 'Sleep') icon = '💤';
+
+                let displayValue = '';
+                if (item.type === 'Blood Pressure') displayValue = item.reading + (item.hr ? ' | HR: ' + item.hr : '');
+                else if (item.type === 'Sleep') displayValue = `Score: ${item.score || '--'} | ${Math.floor(item.totalMins/60)}h ${item.totalMins%60}m`;
+                else displayValue = item.reading || item.value;
+
+                return `
+                <div onclick="openVitalDetail(${index})" class="flex items-center justify-between bg-zinc-900 border border-zinc-800 p-3.5 rounded-xl mb-2 cursor-pointer hover:bg-zinc-800 transition-colors shadow-sm">
+                    <div class="flex items-center gap-3 w-full">
+                        <div class="text-2xl">${icon}</div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-bold text-zinc-100">${item.type}</p>
+                            <p class="text-xs text-zinc-400 whitespace-normal break-words leading-relaxed mt-0.5">${displayValue}</p>
+                        </div>
+                        <div class="text-xs text-zinc-500 whitespace-nowrap ml-2 font-medium">${item.time || ''}</div>
                     </div>
                     <button onclick="event.stopPropagation(); deleteVital(${index})" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-zinc-600 hover:text-red-500 text-lg w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-500/10 transition-all">✖</button>
-                </div>
-            `).join('');
+                </div>`;
+            }).join('');
         }
 
         historyContainer.innerHTML = historyHTML;
@@ -2670,28 +2681,21 @@
 
                 // Vitals
                 if (dayData.vitals) {
-                    dayData.vitals.forEach((v, index) => {
-                let icon = '❤️';
-                if (v.type === 'Blood Pressure') icon = '🩸';
-                if (v.type === 'Sleep') icon = '💤';
-
-                let displayValue = '';
-                if (v.type === 'Blood Pressure') displayValue = `${v.sys}/${v.dia} mmHg${v.hr ? ' | HR: ' + v.hr : ''}`;
-                else if (v.type === 'Sleep') displayValue = `Score: ${v.score || '--'} | ${Math.floor(v.totalMins/60)}h ${v.totalMins%60}m`;
-                else displayValue = v.value;
-
-                // 🚨 NEW: Added onclick and min-w-0 / whitespace-normal to fix mobile clipping!
-                vHTML += `
-                <div onclick="openVitalDetail(${index})" class="flex items-center justify-between bg-zinc-900 border border-zinc-800 p-3.5 rounded-xl mb-2 cursor-pointer hover:bg-zinc-800 transition-colors shadow-sm">
-                    <div class="flex items-center gap-3 w-full">
-                        <div class="text-2xl">${icon}</div>
-                        <div class="flex-1 min-w-0"> <p class="text-sm font-bold text-zinc-100">${v.type}</p>
-                            <p class="text-xs text-zinc-400 whitespace-normal break-words leading-relaxed mt-0.5">${displayValue}</p>
-                        </div>
-                        <div class="text-xs text-zinc-500 whitespace-nowrap ml-2 font-medium">${v.time || ''}</div>
-                    </div>
-                </div>`;
-            });
+                    dayData.vitals.forEach(v => {
+                        if (doBp && v.type === "Blood Pressure" && v.reading) {
+                            let parts = v.reading.split('/');
+                            if (parts.length === 2) {
+                                sysSum += parseInt(parts[0]); diaSum += parseInt(parts[1]); bpCount++;
+                            }
+                        }
+                        if (doHr && v.hr && v.hr !== "Not provided") {
+                            hrSum += parseInt(v.hr); hrCount++;
+                        }
+                        if (doBg && v.type === "Blood Glucose" && v.raw_bg) {
+                            bgSum += parseInt(v.raw_bg); bgCount++;
+                            if (v.tir) { tirSum += parseInt(v.tir); tirCount++; }
+                        }
+                    });
                 }
 				
 				// Nutrition
@@ -4425,19 +4429,20 @@ END:VCALENDAR`.replace(/\n/g, '\r\n');
     window.logUntracked = function() {
         if (!confirm("Are you taking a break? This will log an untracked meal and pause today's calorie counting. Your streak will be preserved!")) return;
 
-        const todayStr = new Date().toLocaleDateString();
+        // 🚨 CHANGED: Target the viewed dashboard date, not 'today'
+        const targetDateStr = viewedDate.toLocaleDateString();
         let dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
         
-        if (!dailyData[todayStr]) dailyData[todayStr] = { meals: [], exercise: 0 };
-        if (!dailyData[todayStr].meals) dailyData[todayStr].meals = [];
+        if (!dailyData[targetDateStr]) dailyData[targetDateStr] = { meals: [], exercise: 0 };
+        if (!dailyData[targetDateStr].meals) dailyData[targetDateStr].meals = [];
         
-        dailyData[todayStr].meals.unshift({
+        dailyData[targetDateStr].meals.unshift({
             time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
             type: "Untracked",
             meal: "🍔 Off-Grid / Untracked Meal",
             score: "N/A",
             calories: 0,
-            untracked: true, // This is the secret flag the dashboard looks for!
+            untracked: true, 
             positives: ["Taking a well-deserved mental health break!"],
             negatives: ["No precise data recorded for this meal."],
             recommendation: "Enjoy your time off! Perfect consistency isn't the goal; long-term sustainability is. Tomorrow is a new day."
@@ -4447,7 +4452,7 @@ END:VCALENDAR`.replace(/\n/g, '\r\n');
         
         if (navigator.vibrate) navigator.vibrate(50);
         
-        viewedDate = new Date(); 
+        // 🚨 CHANGED: Removed the forced reset to "Today"
         updateDashboard();
     };
 	
