@@ -1461,7 +1461,7 @@
             if (filePreview) filePreview.classList.add('hidden');
             
             // NEW: Fire the quick log renderer!
-            renderQuickLog();
+            updateQuickLog();
         }
     }
 
@@ -4423,6 +4423,74 @@ END:VCALENDAR`.replace(/\n/g, '\r\n');
         // Find out which chart is currently open, and redraw it!
         const activeChart = document.getElementById('chart-selector').value;
         window.switchChart(activeChart); 
+    };
+	
+	// --- DYNAMIC QUICK LOG ENGINE ---
+    window.updateQuickLog = function() {
+        const container = document.getElementById('quick-log-container');
+        const list = document.getElementById('quick-log-list');
+        if (!container || !list) return;
+
+        let dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
+        let recentMeals = new Set();
+        let quickLogHTML = '';
+        
+        // Sort dates to get the most recent first
+        let sortedDates = Object.keys(dailyData).sort((a, b) => new Date(b) - new Date(a));
+
+        // Scan the last 14 days of entries for unique meals
+        for (let i = 0; i < Math.min(sortedDates.length, 14); i++) {
+            let day = dailyData[sortedDates[i]];
+            if (day.meals && day.meals.length > 0) {
+                day.meals.forEach(m => {
+                    // Ignore untracked/Zen meals and prevent duplicates
+                    if (m.meal && !m.untracked && m.score !== "N/A" && !recentMeals.has(m.meal)) {
+                        recentMeals.add(m.meal);
+                        
+                        // Package the meal data safely into a string so the button can hold it
+                        const mealDataStr = encodeURIComponent(JSON.stringify(m));
+                        
+                        // Truncate super long names so the buttons stay tidy
+                        let displayName = m.meal.length > 25 ? m.meal.substring(0, 25) + '...' : m.meal;
+                        
+                        quickLogHTML += `
+                        <button onclick="quickAddMeal('${mealDataStr}')" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold py-2 px-3 rounded-lg transition-colors border border-zinc-700 text-left truncate max-w-full">
+                            ${displayName}
+                        </button>`;
+                    }
+                });
+            }
+        }
+        
+        // Only show the section if we actually found recent meals
+        if (recentMeals.size > 0) {
+            list.innerHTML = quickLogHTML;
+            container.classList.remove('hidden');
+        } else {
+            container.classList.add('hidden');
+        }
+    };
+
+    // --- QUICK ADD ACTION ---
+    window.quickAddMeal = function(encodedMeal) {
+        if (navigator.vibrate) navigator.vibrate(15);
+        
+        const m = JSON.parse(decodeURIComponent(encodedMeal));
+        const targetDateStr = viewedDate.toLocaleDateString();
+        let dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
+        
+        if (!dailyData[targetDateStr]) dailyData[targetDateStr] = { meals: [], exercise: 0 };
+        if (!dailyData[targetDateStr].meals) dailyData[targetDateStr].meals = [];
+        
+        // Copy the meal exact data, but give it the current timestamp
+        let newMeal = { ...m };
+        newMeal.time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        
+        dailyData[targetDateStr].meals.unshift(newMeal);
+        localStorage.setItem('alitheaplate_daily', JSON.stringify(dailyData));
+        
+        updateDashboard();
+        navigateTo('screen-dashboard'); // Kick the user back to the dashboard instantly
     };
 	
 	// --- UNTRACKED / OFF-GRID MEAL LOGIC ---
