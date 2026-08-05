@@ -1981,11 +1981,11 @@
         // Format the big reading text based on what kind of vital it is
         let displayValue = '';
         if (vital.type === 'Blood Pressure') {
-            displayValue = `${vital.sys}/${vital.dia} mmHg`;
+            displayValue = `${vital.reading} mmHg`; // 🚨 CHANGED: Now looks for the combined reading!
         } else if (vital.type === 'Sleep') {
             displayValue = `${Math.floor(vital.totalMins / 60)}h ${vital.totalMins % 60}m`;
         } else {
-            displayValue = vital.value || 'Recorded';
+            displayValue = vital.reading || vital.value || 'Recorded'; // 🚨 CHANGED: Added fallback for other vitals
         }
 
         document.getElementById('vital-detail-reading').innerText = displayValue;
