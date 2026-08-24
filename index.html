@@ -184,7 +184,7 @@
             <h3 class="text-sm font-bold text-zinc-500 uppercase tracking-wider">Dashboard</h3>
             <div class="flex items-center gap-2">
                 <button id="prev-day-btn" class="text-zinc-400 hover:text-amber-500 font-bold px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors">&lt;</button>
-                <span id="current-date-display" class="text-xs font-bold text-zinc-300 w-20 text-center">Today</span>
+                <button id="current-date-display" onclick="openCalendarModal()" class="text-xs font-bold text-amber-500 w-24 text-center hover:bg-zinc-800 py-1.5 rounded-lg transition-colors shadow-sm border border-zinc-800 bg-zinc-950">Today</button>
                 <button id="next-day-btn" class="text-zinc-600 font-bold px-3 py-1 rounded bg-zinc-900 cursor-not-allowed" disabled>&gt;</button>
             </div>
         </div>
@@ -754,6 +754,29 @@
             <div class="mt-8 pt-4 border-t border-gray-300 text-center text-xs text-gray-500 italic">
                 <p>This report is compiled from patient self-reported data stored locally on their personal device.</p>
             </div>
+        </div>
+    </div>
+	
+	<!-- CALENDAR MODAL -->
+    <div id="calendar-modal" class="hidden fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-zinc-900 border border-zinc-800 w-full max-w-sm rounded-2xl p-5 shadow-2xl relative">
+            <div class="flex justify-between items-center mb-4">
+                <button onclick="changeCalendarMonth(-1)" class="text-zinc-400 hover:text-amber-500 text-xl font-bold px-3 py-1 rounded-lg hover:bg-zinc-800 transition-colors">&lt;</button>
+                <h3 id="calendar-month-year" class="text-lg font-black text-zinc-100 tracking-wide">Month Year</h3>
+                <button onclick="changeCalendarMonth(1)" class="text-zinc-400 hover:text-amber-500 text-xl font-bold px-3 py-1 rounded-lg hover:bg-zinc-800 transition-colors">&gt;</button>
+            </div>
+
+            <!-- Days of Week Header -->
+            <div class="grid grid-cols-7 text-center text-[10px] font-bold text-zinc-500 mb-2 uppercase">
+                <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+            </div>
+
+            <!-- Days Grid Container -->
+            <div id="calendar-grid" class="grid grid-cols-7 text-center text-sm gap-y-2"></div>
+
+            <button onclick="closeCalendarModal()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold py-3 rounded-xl mt-6 transition-colors border border-zinc-700">
+                Cancel
+            </button>
         </div>
     </div>
 	
@@ -1493,6 +1516,74 @@
     let viewedDate = new Date(); // Global variable to track which day we are looking at
 	let pendingMeal = null;
 	let mealFilesArray = [];
+
+	// --- CALENDAR ENGINE ---
+    let calendarRenderDate = new Date();
+
+    window.openCalendarModal = function() {
+        if (navigator.vibrate) navigator.vibrate(10);
+        calendarRenderDate = new Date(viewedDate); // Always open to the month you are currently looking at!
+        renderCalendar();
+        document.getElementById('calendar-modal').classList.remove('hidden');
+    };
+
+    window.closeCalendarModal = function() {
+        document.getElementById('calendar-modal').classList.add('hidden');
+    };
+
+    window.changeCalendarMonth = function(offset) {
+        if (navigator.vibrate) navigator.vibrate(10);
+        calendarRenderDate.setMonth(calendarRenderDate.getMonth() + offset);
+        renderCalendar();
+    };
+
+    window.renderCalendar = function() {
+        const year = calendarRenderDate.getFullYear();
+        const month = calendarRenderDate.getMonth();
+
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        document.getElementById('calendar-month-year').innerText = `${monthNames[month]} ${year}`;
+
+        // Get calendar grid boundaries
+        const firstDay = new Date(year, month, 1).getDay(); // 0 (Sun) to 6 (Sat)
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        const grid = document.getElementById('calendar-grid');
+        let html = '';
+
+        // Add blank spaces to pad the start of the month
+        for (let i = 0; i < firstDay; i++) {
+            html += `<div class="p-2"></div>`;
+        }
+
+        const todayStr = new Date().toLocaleDateString();
+        const viewedStr = viewedDate.toLocaleDateString();
+
+        // Draw the actual days
+        for (let i = 1; i <= daysInMonth; i++) {
+            const thisDateStr = new Date(year, month, i).toLocaleDateString();
+            let classes = "p-2 w-8 h-8 mx-auto flex items-center justify-center rounded-full cursor-pointer transition-all hover:bg-zinc-800 text-zinc-300";
+
+            if (thisDateStr === viewedStr) {
+                // Highlight the date you are currently viewing with a solid block
+                classes += " bg-amber-500 text-zinc-950 font-black shadow-md hover:bg-amber-400";
+            } else if (thisDateStr === todayStr) {
+                // Highlight actual "Today" with an outline so you don't lose it
+                classes += " border border-amber-500/50 text-amber-500 font-bold";
+            }
+
+            html += `<div onclick="selectCalendarDate(${year}, ${month}, ${i})" class="${classes}">${i}</div>`;
+        }
+
+        grid.innerHTML = html;
+    };
+
+    window.selectCalendarDate = function(year, month, day) {
+        if (navigator.vibrate) navigator.vibrate(15);
+        viewedDate = new Date(year, month, day);
+        updateDashboard(); // Instantly jump the dashboard to the clicked day
+        closeCalendarModal();
+    };
 
     // --- CHART ENGINE ---
     let weightChartInstance = null;
@@ -2839,10 +2930,13 @@
     };
 	
 	window.generateWeeklyReport = async function() {
+        const targetDateStr = viewedDate.toLocaleDateString(); // 🚨 NEW: Use the date we are actually looking at!
+
         const cachedData = JSON.parse(localStorage.getItem('alitheaplate_weekly_report') || 'null');
         const now = new Date().getTime();
         
-        if (cachedData && cachedData.text && (now - cachedData.timestamp) < 432000000) {
+        // Ensure the cache matches the specific date we are viewing
+        if (cachedData && cachedData.text && cachedData.date === targetDateStr && (now - cachedData.timestamp) < 432000000) {
             console.log("Loading cached report to save API tokens...");
             displayReportInUI(cachedData.text);
             return;
@@ -2852,8 +2946,9 @@
         const allDailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
         const trendData = [];
 
+        // 🚨 NEW: Loop backwards from viewedDate, not 'today'!
         for (let i = 0; i < 7; i++) {
-            let d = new Date();
+            let d = new Date(viewedDate);
             d.setDate(d.getDate() - i);
             let dateStr = d.toLocaleDateString();
             
@@ -2877,7 +2972,7 @@
             }
         }
 
-        const promptText = `Act as an expert health coach. Analyze this 7-day data trend. 
+        const promptText = `Act as an expert health coach. Analyze this 7-day data trend ending on ${targetDateStr}. 
         User Goals: ${profile.fitnessGoal || "General Health"}
         Medical Conditions: ${profile.conditions || "None reported"}
         
@@ -2908,25 +3003,25 @@
             
             const reportText = data.candidates[0].content.parts[0].text;
 
-            // 1. Save to Temporary Cache (so the button doesn't spam the API)
+            // 🚨 NEW: Include the exact date string in the cache
             localStorage.setItem('alitheaplate_weekly_report', JSON.stringify({
                 timestamp: now,
+                date: targetDateStr,
                 text: reportText
             }));
 
-            // 2. NEW: Save permanently to today's Dashboard History!
-            const todayStr = new Date().toLocaleDateString();
+            // 🚨 NEW: Save permanently to the VIEWED day's history, not "today"
             let dailyData = JSON.parse(localStorage.getItem('alitheaplate_daily') || '{}');
-            if (!dailyData[todayStr]) dailyData[todayStr] = { meals: [], exercise: 0 };
-            if (!dailyData[todayStr].reports) dailyData[todayStr].reports = [];
+            if (!dailyData[targetDateStr]) dailyData[targetDateStr] = { meals: [], exercise: 0 };
+            if (!dailyData[targetDateStr].reports) dailyData[targetDateStr].reports = [];
             
-            dailyData[todayStr].reports.unshift({
+            dailyData[targetDateStr].reports.unshift({
                 time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
                 text: reportText
             });
             localStorage.setItem('alitheaplate_daily', JSON.stringify(dailyData));
             
-            updateDashboard(); // Instantly show it in the list
+            updateDashboard(); 
             displayReportInUI(reportText);
 
         } catch (error) {
